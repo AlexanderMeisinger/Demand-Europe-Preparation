@@ -21,7 +21,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: ""
-  name: ""
+  name: "fneum-h2-network-main"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -41,12 +41,10 @@ scenario:
   - vopt
   clusters:
   - 39
-  - 128
-  - 256
   opts:
   - ''
   sector_opts:
-  - ''
+  - 'Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10-onwind+p0'
   planning_horizons:
   # - 2020
   # - 2030
@@ -594,7 +592,7 @@ sector:
   boilers: true
   resistive_heaters: true
   oil_boilers: false
-  biomass_boiler: true
+  biomass_boiler: false
   overdimension_heat_generators:
     decentral: 1.1  #to cover demand peaks bigger than data
     central: 1.0
@@ -604,7 +602,7 @@ sector:
     - solid biomass # For solid biomass, CHP with and without CC are added
     - gas # For all other fuels the same techno economic data from gas CHP is taken
     micro_chp: false # Only gas is used for micro_chp
-  solar_thermal: true
+  solar_thermal: false
   solar_cf_correction: 0.788457  # =  >>> 1/1.2683
   marginal_cost_storage: 0. #1e-4
   methanation: true
@@ -688,7 +686,7 @@ sector:
       efficiency_static: 0.97
   H2_network: true
   gas_network: false
-  H2_retrofit: false
+  H2_retrofit: true
   H2_retrofit_capacity_per_CH4: 0.6
   gas_network_connectivity_upgrade: 1
   gas_distribution_grid: true
@@ -780,7 +778,7 @@ industry:
     2035: 0.7
     2040: 0.6
     2045: 0.5
-    2050: 0.4
+    2050: 0.45
   HVC_mechanical_recycling_fraction:
     2020: 0.12
     2025: 0.15
@@ -796,7 +794,7 @@ industry:
     2035: 0.08
     2040: 0.12
     2045: 0.16
-    2050: 0.20
+    2050: 0.15
   HVC_environment_sequestration_fraction: 0.
   waste_to_energy: false
   waste_to_energy_cc: false
