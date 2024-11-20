@@ -45,7 +45,7 @@ scenario:
   opts:
   - ''
   sector_opts:
-  - 'Co2L0-8760SEG-T-H-B-I-S-A-onwind+p0.5' #Not all parameters are right since S is not available in this version
+  - 'Co2L0-1SEG-T-H-B-I-S-A-onwind+p0.5' #Not all parameters are right since S is not available in this version
   planning_horizons:
   # - 2020
   # - 2030
