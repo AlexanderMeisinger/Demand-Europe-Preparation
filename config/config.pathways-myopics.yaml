@@ -1,3 +1,13 @@
+"""
+# Summary:
+  - 144H-T-H-B-I-solar+p3-dist1-cb25.7ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb35.4ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb45.0ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb54.7ex0 - worked out
+  - 144H-T-H-B-I-solar+p3-dist1-cb64.3ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb73.9ex0 - worked out
+=> Error: Infeasible
+"""
 # SPDX-FileCopyrightText: : 2017-2024 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: CC0-1.0
@@ -21,7 +31,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: ""
-  name: "myopic-default-2025-2050-5-steps"
+  name: "myopic-martavp-2025-2050-5-steps"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -46,7 +56,12 @@ scenario:
   opts:
   - ''
   sector_opts:
-  - '144h'
+  - 144H-T-H-B-I-solar+p3-dist1-cb25.7ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb35.4ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb45.0ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb54.7ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb64.3ex0
+  - 144H-T-H-B-I-solar+p3-dist1-cb73.9ex0
   planning_horizons:
   - 2025
   - 2030
