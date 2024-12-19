@@ -46,7 +46,7 @@ scenario:
   opts:
   - ''
   sector_opts:
-  - '144h'
+  - '144H-solar+p3-dist1'
   planning_horizons:
   - 2025
   - 2030
@@ -76,13 +76,13 @@ enable:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#co2-budget
 co2_budget:
-  2020: 0.701
-  2025: 0.524
-  2030: 0.297
-  2035: 0.150
-  2040: 0.150 #0.071
-  2045: 0.150 #0.032
-  2050: 0.150 #0.000
+  2020: 1 #0.701
+  2025: 1 #0.524
+  2030: 1 #0.297
+  2035: 1 #0.150
+  2040: 1 #0.071
+  2045: 1 #0.032
+  2050: 1 #0.000
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#electricity
 electricity:
