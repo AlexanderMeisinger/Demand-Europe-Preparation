@@ -21,7 +21,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: ""
-  name: "fneum-h2-network-main"
+  name: "fneum-h2-network-main-test"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -32,26 +32,26 @@ run:
   shared_cutouts: true
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#foresight
-foresight: overnight
+foresight: myopic
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#scenario
 # Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
 scenario:
   ll:
   - vopt
-  - v1.0
+  #- v1.0
   clusters:
   - 39
   opts:
   - ''
   sector_opts:
-  #- Co2L0.297-144H-T-H-B-I-A-solar+p3-linemaxext10-onwind+p0
+  - 144H-T-H-B-I-A-solar+p3-linemaxext10-onwind+p0
   #- Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10-noH2network
-  - Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10-noH2network-onwind+p0
+  #- Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10-noH2network-onwind+p0
   planning_horizons:
-  # - 2020
-  # - 2030
-  # - 2040
+  #- 2020
+  - 2030
+  - 2040
   - 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries

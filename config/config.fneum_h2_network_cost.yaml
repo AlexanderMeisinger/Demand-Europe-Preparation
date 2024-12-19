@@ -21,7 +21,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: ""
-  name: "fneum-h2-network-main"
+  name: "fneum-h2-network-cost-test"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -45,9 +45,8 @@ scenario:
   opts:
   - ''
   sector_opts:
-  #- Co2L0.297-144H-T-H-B-I-A-solar+p3-linemaxext10-onwind+p0
-  #- Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10-noH2network
-  - Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10-noH2network-onwind+p0
+  - Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10
+  - Co2L0-144H-T-H-B-I-A-solar+p3-linemaxext10-noH2network
   planning_horizons:
   # - 2020
   # - 2030
@@ -827,7 +826,7 @@ industry:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#costs
 costs:
-  year: 2030
+  year: 2050
   version: v0.9.2
   social_discountrate: 0.02
   fill_values:
