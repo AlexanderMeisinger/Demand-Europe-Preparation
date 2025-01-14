@@ -21,13 +21,13 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: "myopic"
-  name: "myopic-default-2025-2050-5-steps-all-sectors"
+  name: "myopic-martavp-2025-2050-5-steps-all-sectors"
   scenarios:
     enable: false
     file: config/scenarios.yaml
   disable_progressbar: false
   shared_resources:
-    policy: false
+    policy: "myopic"
     exclude: []
   shared_cutouts: true
 
@@ -47,6 +47,7 @@ scenario:
   - ''
   sector_opts:
   - '144H-T-H-B-I-A'
+  #- '144H-T-H-B-I-A-solar+p3-dist1'
   planning_horizons:
   #- 2020
   - 2025
@@ -83,8 +84,7 @@ co2_budget:
   2035: 0.150
   2040: 0.071
   2045: 0.032
-  2050: 0.000
-
+  2050: 0
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#electricity
 electricity:
   voltages: [220., 300., 330., 380., 400., 500., 750.]
