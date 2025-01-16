@@ -34,10 +34,10 @@ CLUSTERS = 39
 
 MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
 IMP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
-SHP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
-COST_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-noh2grid-2025-2050-5-T-H-B-I-A"
+LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-low_carbon_budget-2025-2050-5-T-H-B-I-A"
 
-with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/config.pathways-myopics_default_cb_red.yaml") as file:
+with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/config.myopic_main.yaml") as file:
     config = yaml.safe_load(file)
 
 #ToDo: Check and adapt tech_colors
@@ -527,13 +527,13 @@ def rename_techs_h2_balances(tech):
 
 SCENARIOS = {
     (0, 0, 0, 0): (MAIN_SCENARIOS, 100), 
-    (1, 0, 0, 0): (COST_SCENARIOS, 100),
+    (1, 0, 0, 0): (LOWCARBON_SCENARIOS, 100),
     (0, 1, 0, 0): (IMP_SCENARIOS, 100),
-    (0, 0, 1, 0): (SHP_SCENARIOS, 100),
+    (0, 0, 1, 0): (NOH2GRID_SCENARIOS, 100),
     (0, 0, 0, 1): (MAIN_SCENARIOS, 100),
 }
 
-NAMES = ["optimistic_costs", "imports", "hydrogen_in_shipping", "no_onwind"]
+NAMES = ["low_carbon", "imports", "no_h2grid", "no_onwind"]
 tsc = pd.concat(
     {
         k: load_main(scenarios).xs(onw, level="onw", axis=1)
