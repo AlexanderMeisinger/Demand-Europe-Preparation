@@ -25,7 +25,7 @@ from vresutils.costdata import annuity
 PATH = "/mnt/e/H2GMA/Github/Europe/pypsa-eur"
 
 sys.path.append(os.path.join(PATH, "scripts/"))
-#from plot_summary import rename_techs
+from _helpers import rename_techs
 
 #plt.style.use(["bmh", "matplotlibrc"])
 xr.set_options(display_style="html")
@@ -37,6 +37,84 @@ IMP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-defa
 SHP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
 COST_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
 	
+def rename_techs_tyndp(tech):
+    tech = rename_techs(tech)
+    if "heat pump" in tech or "resistive heater" in tech:
+        return "power-to-heat"
+    elif tech in ["H2 Electrolysis"]:  # , "H2 liquefaction"]:
+        return "power-to-hydrogen"
+    elif "H2 pipeline" in tech:
+        return "H2 pipeline"
+    elif tech == "H2":
+        return "H2 storage"
+    elif tech in ["OCGT", "CHP", "gas boiler", "H2 Fuel Cell"]:
+        return "gas-to-power/heat"
+    # elif "solar" in tech:
+    #    return "solar"
+    elif tech in ["Fischer-Tropsch", "methanolisation"]:
+        return "power-to-liquid"
+    elif "offshore wind" in tech:
+        return "offshore wind"
+    elif "SMR" in tech:
+        return tech.replace("SMR", "steam methane reforming")
+    elif "DAC" in tech:
+        return "direct air capture"
+    elif "CC" in tech or "sequestration" in tech:
+        return "carbon capture"
+    elif tech == "oil" or tech == "gas":
+        return "fossil oil and gas"
+    else:
+        return tech
+    
+preferred_order = pd.Index(
+    [
+        "transmission lines",
+        "electricity distribution grid",
+        "fossil oil and gas",
+        "hydroelectricity",
+        "hydro reservoir",
+        "run of river",
+        "pumped hydro storage",
+        "solid biomass",
+        "biogas",
+        "onshore wind",
+        "offshore wind",
+        "offshore wind (AC)",
+        "offshore wind (DC)",
+        "solar PV",
+        "solar thermal",
+        "solar rooftop",
+        "solar",
+        "building retrofitting",
+        "ground heat pump",
+        "air heat pump",
+        "heat pump",
+        "resistive heater",
+        "power-to-heat",
+        "gas-to-power/heat",
+        "CHP",
+        "OCGT",
+        "gas boiler",
+        "gas",
+        "natural gas",
+        "helmeth",
+        "methanation",
+        "power-to-gas",
+        "power-to-hydrogen",
+        "H2 pipeline",
+        "H2 liquefaction",
+        "H2 storage",
+        "hydrogen storage",
+        "power-to-liquid",
+        "battery storage",
+        "hot water storage",
+        "CO2 sequestration",
+        "CCS",
+        "carbon capture and sequestration",
+        "DAC",
+        "direct air capture",
+    ]
+)
 
 def parse_index(c):
     clusters = c[0]
@@ -105,10 +183,9 @@ def load_main_supply_energy(
     if scenarios is None:
         scenarios = MAIN_SCENARIOS
 
-    if clusters is None:
-        clusters = CLUSTERS
+    clusters = CLUSTERS
 
-    horizon = "2030" if "rev0" in scenarios else "2050"
+    #horizon = "2030" if "rev0" in scenarios else "2050"
 
     df = pd.read_csv(
         scenarios + "/csvs/supply_energy.csv", index_col=[0, 1, 2], header=[0, 1, 2, 3]
@@ -126,14 +203,14 @@ def load_main_supply_energy(
         for i in df.index
     ]
 
-    df = df.xs(horizon, level="planning_horizon", axis=1)
+    #df = df.xs(horizon, level="planning_horizon", axis=1)
 
     names = ["clusters", "lv", "onw", "h2"]
     if with_resolution:
         names += ("res",)
 
     df.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c, with_resolution) for c in df.columns], names=names
+        [parse_index(c) for c in df.columns], names=names
     )
 
     if not with_space:
@@ -154,7 +231,6 @@ def load_main_supply_energy(
     if "-imp" in scenarios and carrier == "energy":
         # imports for methanol, kerosene and naphtha
         df.loc["green e-fuel imports"] = 1026.64 + 546.36  # TWh
-        tech_colors["green e-fuel imports"] = "#46caf0"
 
     return df
 
@@ -190,8 +266,9 @@ energy = pd.concat(
     names=NAMES,
 )
 
+energy = energy.xs("vopt", level="lv", axis=1)
 energy.index.names = energy.index.names[:-1] + ["carrier"]
-energy = energy.stack([0, 1]).to_xarray()
+energy = energy.stack([0]).to_xarray()
 energy.name = "energy"
 
 ds = xr.merge([tsc, energy]).round(2)
