@@ -368,7 +368,32 @@ co2.index.names = co2.index.names[:-1] + ["carrier"]
 co2 = co2.stack([0, 1]).to_xarray()
 co2.name = "co2"
 
-ds = xr.merge([tsc, energy, co2]).round(2)
+def read_capacities(scenarios, onw):
+    gw, twh = load_main_capacities(scenarios, merge=False)
+
+    gw = gw.xs(onw, level="onw", axis=1)
+    twh = twh.xs(onw, level="onw", axis=1)
+
+    gen = gw.loc[["generators", "storage_units"]].groupby(level=1).sum()
+
+    con = gw.loc[["links"]].groupby(level=1).sum()
+    return gen, con, twh
+
+cap = pd.concat(
+    {
+        k: pd.concat(
+            read_capacities(scenarios, onw),
+            keys=["generation", "conversion", "storage"],
+        )
+        for k, (scenarios, onw) in SCENARIOS.items()
+    },
+    names=NAMES,
+)
+
+cap.index.names = cap.index.names[:-2] + ["category", "carrier"]
+cap = cap.stack([0, 1]).unstack("category").to_xarray()
+
+ds = xr.merge([tsc, energy, co2, cap]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
 ds.to_netcdf("scenarios_myopic_costs_energy_co2.nc", encoding=encoding)
