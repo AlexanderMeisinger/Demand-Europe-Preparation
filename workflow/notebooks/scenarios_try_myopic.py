@@ -197,6 +197,88 @@ def load_main(
 
     return df
 
+def load_main_capacities(
+    scenarios=None,
+    clusters=None,
+    rename=True,
+    with_resolution=False,
+    with_space=False,
+    merge=True,
+):
+    if scenarios is None:
+        scenarios = MAIN_SCENARIOS
+
+    if clusters is None:
+        clusters = CLUSTERS
+
+    horizon = "2030" if "rev0" in scenarios else "2050"
+
+    df = pd.read_csv(
+        scenarios + f"/csvs/capacities.csv", header=[0, 1, 2, 3], index_col=[0, 1]
+    )
+
+    df = df.xs(horizon, level="planning_horizon", axis=1)
+
+    names = ["clusters", "lv", "onw", "h2"]
+    if with_resolution:
+        names += ("res",)
+
+    df.columns = pd.MultiIndex.from_tuples(
+        [parse_index(c, with_resolution) for c in df.columns], names=names
+    )
+
+    if not with_space:
+        df = df.xs(str(clusters), level="clusters", axis=1)
+
+    if rename:
+        grouper = [
+            df.index.get_level_values(0),
+            df.index.get_level_values(1).map(rename_techs_tyndp),
+        ]
+        df = df.groupby(grouper).sum()
+
+    to_drop = df.index[df.max(axis=1).fillna(0.0) < 10]
+    df.drop(to_drop, inplace=True)
+
+    twh = df.xs("stores", level=0).div(1e6)  # TWh
+
+    to_drop = [
+        "CCS",
+        "biogas",
+        "co2",
+        "fossil oil and gas",
+        "solid biomass",
+    ]
+    twh.drop(twh.index.intersection(to_drop), inplace=True)
+
+    gw = df.drop(["stores", "lines"]).div(1e3)  # GW
+
+    if merge:
+        gw = gw.groupby(level=1).sum()
+        techs = gw.index
+        kwargs = dict()
+    else:
+        techs = gw.index.levels[1]
+        kwargs = dict(level=1)
+
+    to_drop = [
+        "fossil oil and gas",
+        "transmission lines",
+        "DAC",
+        "direct air capture",
+        "H2 pipeline",
+        "H2 pipeline retrofitted",
+        "CCS",
+        "carbon capture" "biogas",
+        "gas for industry",
+        "hot water storage",
+        "solid biomass for industry",
+        "process emissions",
+    ]
+    gw.drop(techs.intersection(to_drop), **kwargs, inplace=True)
+
+    return gw, twh
+
 def load_main_supply_energy(
     scenarios=None,
     clusters=None,
