@@ -208,23 +208,22 @@ def load_main_capacities(
     if scenarios is None:
         scenarios = MAIN_SCENARIOS
 
-    if clusters is None:
-        clusters = CLUSTERS
+    clusters = CLUSTERS
 
-    horizon = "2030" if "rev0" in scenarios else "2050"
+    #horizon = "2030" if "rev0" in scenarios else "2050"
 
     df = pd.read_csv(
         scenarios + f"/csvs/capacities.csv", header=[0, 1, 2, 3], index_col=[0, 1]
     )
 
-    df = df.xs(horizon, level="planning_horizon", axis=1)
+    #df = df.xs(horizon, level="planning_horizon", axis=1)
 
     names = ["clusters", "lv", "onw", "h2"]
     if with_resolution:
         names += ("res",)
 
     df.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c, with_resolution) for c in df.columns], names=names
+        [parse_index(c) for c in df.columns], names=names
     )
 
     if not with_space:
@@ -478,5 +477,5 @@ cap = cap.stack([0, 1]).unstack("category").to_xarray()
 ds = xr.merge([tsc, energy, co2, cap]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
-ds.to_netcdf("scenarios_myopic_costs_energy_co2.nc", encoding=encoding)
+ds.to_netcdf("scenarios_myopic_costs_energy_co2_cap.nc", encoding=encoding)
 
