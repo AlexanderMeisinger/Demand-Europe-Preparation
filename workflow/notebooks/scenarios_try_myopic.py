@@ -94,6 +94,70 @@ def load_main(
 
     return df
 
+def load_main_supply_energy(
+    scenarios=None,
+    clusters=None,
+    rename=True,
+    with_resolution=False,
+    with_space=False,
+    carrier="energy",
+):
+    if scenarios is None:
+        scenarios = MAIN_SCENARIOS
+
+    if clusters is None:
+        clusters = CLUSTERS
+
+    horizon = "2030" if "rev0" in scenarios else "2050"
+
+    df = pd.read_csv(
+        scenarios + "/csvs/supply_energy.csv", index_col=[0, 1, 2], header=[0, 1, 2, 3]
+    )
+
+    co2_carriers = ["co2", "co2 stored", "process emissions"]
+    if carrier == "energy":
+        carrier = [i for i in df.index.levels[0] if i not in co2_carriers]
+
+    df = df.loc[carrier].groupby(level=2).sum().div(1e6)  # TWh / MtCO2
+    df.index = [
+        i[:-1]
+        if ((i not in ["co2", "NH3", "H2"]) and (i[-1:] in ["0", "1", "2", "3"]))
+        else i
+        for i in df.index
+    ]
+
+    df = df.xs(horizon, level="planning_horizon", axis=1)
+
+    names = ["clusters", "lv", "onw", "h2"]
+    if with_resolution:
+        names += ("res",)
+
+    df.columns = pd.MultiIndex.from_tuples(
+        [parse_index(c, with_resolution) for c in df.columns], names=names
+    )
+
+    if not with_space:
+        df = df.xs(str(clusters), level="clusters", axis=1)
+
+    if rename or callable(rename):
+        func = rename if callable(rename) else rename_techs_tyndp
+        df = df.groupby(df.index.map(func)).sum()
+
+    to_drop = df.index[df.abs().max(axis=1).fillna(0.0) < 10]
+    df.drop(to_drop, inplace=True)
+
+    order = preferred_order.intersection(df.index).append(
+        df.index.difference(preferred_order)
+    )
+    df = df.loc[order]
+
+    if "-imp" in scenarios and carrier == "energy":
+        # imports for methanol, kerosene and naphtha
+        df.loc["green e-fuel imports"] = 1026.64 + 546.36  # TWh
+        tech_colors["green e-fuel imports"] = "#46caf0"
+
+    return df
+
     
 SCENARIOS = {
     (0, 0, 0, 0): (MAIN_SCENARIOS, 100), 
@@ -118,7 +182,19 @@ tsc.index.names = tsc.index.names[:-1] + ["carrier"]
 tsc = tsc.stack([0]).to_xarray()
 tsc.name = "costs"
 
-ds = xr.merge([tsc]).round(2)
+energy = pd.concat(
+    {
+        k: load_main_supply_energy(scenarios).xs(onw, level="onw", axis=1)
+        for k, (scenarios, onw) in SCENARIOS.items()
+    },
+    names=NAMES,
+)
+
+energy.index.names = energy.index.names[:-1] + ["carrier"]
+energy = energy.stack([0, 1]).to_xarray()
+energy.name = "energy"
+
+ds = xr.merge([tsc, energy]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
 ds.to_netcdf("scenarios_myopic.nc", encoding=encoding)
