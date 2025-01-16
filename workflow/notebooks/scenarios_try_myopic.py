@@ -259,6 +259,7 @@ def load_main_supply_energy(
 
     return df
 
+# Double check carbon_balances
 def carbon_balances(scenarios, onw=100):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
@@ -370,5 +371,5 @@ co2.name = "co2"
 ds = xr.merge([tsc, energy, co2]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
-ds.to_netcdf("scenarios_myopic.nc", encoding=encoding)
+ds.to_netcdf("scenarios_myopic_costs_energy_co2.nc", encoding=encoding)
 
