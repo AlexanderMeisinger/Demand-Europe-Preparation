@@ -22,33 +22,25 @@ from matplotlib.transforms import Bbox
 
 from vresutils.costdata import annuity
 
-PATH = "../workflows/pypsa-eur-sec/"
+PATH = "/mnt/e/H2GMA/Github/Europe/pypsa-eur"
 
 sys.path.append(os.path.join(PATH, "scripts/"))
-from plot_summary import rename_techs
+from _helpers import rename_techs
 
-plt.style.use(["bmh", "matplotlibrc"])
 xr.set_options(display_style="html")
 
 
-CLUSTERS = 181
-LV_OPTS = "Co2L0-3H-T-H-B-I-A-solar+p3-linemaxext10"
-OUTPUT = "../results/graphics-20221227/"
+CLUSTERS = 39
 
-MAIN_SCENARIOS = PATH + "results/20221227-main"
-DEC_SCENARIOS = PATH + "results/20221227-decentral"
-LV_SCENARIOS = PATH + "results/20221227-lv"
-ONW_SCENARIOS = PATH + "results/20221227-onw"
-GAS_SCENARIOS = PATH + "results/20221227-gas"
-IMP_SCENARIOS = PATH + "results/20221227-import"
-SHP_SCENARIOS = PATH + "results/20221227-shipping"
-COST_SCENARIOS = PATH + "results/20221227-costs"
-TIME_SCENARIOS = PATH + "results/20221227-time"
-SPACE_SCENARIOS = PATH + "results/20221227-spatial"
-OLD_SCENARIOS = "../workflows-rev0/pypsa-eur-sec/results/20211218-181-h2"
-latex = {}
-with open(PATH + "config.main.yaml") as file:
+MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+IMP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+SHP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+COST_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+
+with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/config.pathways-myopics_default_cb_red.yaml") as file:
     config = yaml.safe_load(file)
+
+#ToDo: Check and adapt tech_colors
 tech_colors = config["plotting"]["tech_colors"]
 tech_colors["battery electric vehicles"] = tech_colors["BEV charger"]
 tech_colors["other"] = "#454545"
@@ -58,7 +50,7 @@ tech_colors["residential electricity demand"] = "#72709c"
 tech_colors["industry electricity demand"] = tech_colors["electricity"]
 tech_colors["hydrogen demand"] = tech_colors["land transport fuel cell"]
 tech_colors["agriculture machinery"] = tech_colors["land transport fuel cell"]
-tech_colors["methane demand"] = tech_colors["helmeth"]
+#tech_colors["methane demand"] = tech_colors["helmeth"] #ToDo: Adapt
 tech_colors["liquid hydrocarbon demand"] = tech_colors["kerosene for aviation"]
 tech_colors["aviation fuels"] = tech_colors["kerosene for aviation"]
 tech_colors["shipping fuels"] = tech_colors["shipping methanol"]
@@ -67,8 +59,8 @@ tech_colors["biogas upgrading"] = tech_colors["biogas"]
 tech_colors["hydrogen for industry"] = tech_colors["H2 for industry"]
 tech_colors["hydrogen-to-power/heat"] = tech_colors["gas-to-power/heat"]
 tech_colors["hydrogen for land transport"] = "#8487e8"
-if not os.path.exists(OUTPUT):
-    os.makedirs(OUTPUT)
+
+
 def rename_techs_tyndp(tech):
     tech = rename_techs(tech)
     if "heat pump" in tech or "resistive heater" in tech:
@@ -97,6 +89,8 @@ def rename_techs_tyndp(tech):
         return "fossil oil and gas"
     else:
         return tech
+    
+
 def rename_techs_balances(tech):
     tech = rename_techs(tech)
     if "heat pump" in tech:
@@ -155,6 +149,8 @@ def rename_techs_balances(tech):
         return "other"
     else:
         return tech
+    
+
 def rename_techs_carbon_balances(tech):
     prefix_to_remove = [
         "residential ",
@@ -179,6 +175,8 @@ def rename_techs_carbon_balances(tech):
         return tech.replace("SMR", "steam methane reforming")
     else:
         return tech
+    
+
 preferred_order = pd.Index(
     [
         "transmission lines",
@@ -228,6 +226,8 @@ preferred_order = pd.Index(
         "direct air capture",
     ]
 )
+
+
 def parse_index(c, with_resolution=False):
     clusters = c[0]
 
@@ -236,7 +236,8 @@ def parse_index(c, with_resolution=False):
     match = re.search(r"onwind\+p([0-9.]*)", c[2])
     onw = 100.0 if match is None else 100 * float(match.groups()[0])
 
-    h2 = "no H2 grid" if "noH2network" in c[2] else "H2 grid"
+    #h2 = "no H2 grid" if "noH2network" in c[2] else "H2 grid"
+    h2 = c[3]
 
     to_return = (clusters, lv, onw, h2)
 
@@ -245,60 +246,23 @@ def parse_index(c, with_resolution=False):
         to_return += (int(match[0]),)
 
     return to_return
-def load_decentral():
-    costs = pd.read_csv(
-        DEC_SCENARIOS + "/csvs/costs.csv", header=[0, 1, 2, 3], index_col=[0, 1, 2]
-    )
 
-    costs = costs.xs("2050", level="planning_horizon", axis=1)
 
-    costs.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c) for c in costs.columns], names=["clusters", "lv", "onw", "h2"]
-    )
-
-    costs = costs.xs(str(CLUSTERS), level="clusters", axis=1)
-
-    df = costs.groupby(level=2).sum().div(1e9)
-
-    df = df.groupby(df.index.map(rename_techs_tyndp)).sum()
-
-    df = df.xs(100, level="onw", axis=1, drop_level=False)
-
-    df.sum() / df.sum().min()
-
-    to_drop = df.index[df.max(axis=1).fillna(0.0) < 1.2]
-    print(to_drop)
-    df.drop(to_drop, inplace=True)
-
-    order = preferred_order.intersection(df.index).append(
-        df.index.difference(preferred_order)
-    )
-    df = df.loc[order]
-
-    tech_colors = config["plotting"]["tech_colors"]
-    colors = [tech_colors[i] for i in df.index]
-
-    df.columns = df.columns.get_level_values(2)
-    df.columns.name = ""
-
-    return df
- 
 def load_main(
     scenarios=None, clusters=None, rename=True, with_resolution=False, with_space=False
 ):
     if scenarios is None:
         scenarios = MAIN_SCENARIOS
 
-    if clusters is None:
-        clusters = CLUSTERS
+    clusters = CLUSTERS
 
-    horizon = "2030" if "rev0" in scenarios else "2050"
+    #horizon = "2030" if "rev0" in scenarios else "2050"
 
     costs = pd.read_csv(
         scenarios + f"/csvs/costs.csv", header=[0, 1, 2, 3], index_col=[0, 1, 2]
     )
 
-    costs = costs.xs(horizon, level="planning_horizon", axis=1)
+    #costs = costs.xs(horizon, level="planning_horizon", axis=1)
 
     names = ["clusters", "lv", "onw", "h2"]
     if with_resolution:
@@ -325,6 +289,7 @@ def load_main(
     )
     df = df.loc[order]
 
+    # H2G-A: Probably change neccessary
     if "-imp" in scenarios:
         # imports for methanol, kerosene and naphtha at 120 €/MWh
         print("add import costs")
@@ -332,6 +297,8 @@ def load_main(
         tech_colors["green e-fuel imports"] = "#46caf0"
 
     return df
+
+
 def load_main_capacities(
     scenarios=None,
     clusters=None,
@@ -343,16 +310,15 @@ def load_main_capacities(
     if scenarios is None:
         scenarios = MAIN_SCENARIOS
 
-    if clusters is None:
-        clusters = CLUSTERS
+    clusters = CLUSTERS
 
-    horizon = "2030" if "rev0" in scenarios else "2050"
+    #horizon = "2030" if "rev0" in scenarios else "2050"
 
     df = pd.read_csv(
         scenarios + f"/csvs/capacities.csv", header=[0, 1, 2, 3], index_col=[0, 1]
     )
 
-    df = df.xs(horizon, level="planning_horizon", axis=1)
+    #df = df.xs(horizon, level="planning_horizon", axis=1)
 
     names = ["clusters", "lv", "onw", "h2"]
     if with_resolution:
@@ -413,94 +379,8 @@ def load_main_capacities(
     gw.drop(techs.intersection(to_drop), **kwargs, inplace=True)
 
     return gw, twh
-def load_main_energy(
-    scenarios=None, clusters=None, rename=True, with_resolution=False, with_space=False
-):
-    if scenarios is None:
-        scenarios = MAIN_SCENARIOS
 
-    if clusters is None:
-        clusters = CLUSTERS
 
-    horizon = "2030" if "rev0" in scenarios else "2050"
-
-    df = pd.read_csv(
-        scenarios + f"/csvs/energy.csv", header=[0, 1, 2, 3], index_col=[0, 1]
-    )
-
-    df = df.xs(horizon, level="planning_horizon", axis=1)
-
-    names = ["clusters", "lv", "onw", "h2"]
-    if with_resolution:
-        names += ("res",)
-
-    df.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c, with_resolution) for c in df.columns], names=names
-    )
-
-    if not with_space:
-        df = df.xs(str(clusters), level="clusters", axis=1)
-
-    df = df.groupby(level=1).sum().div(1e6)  # TWh
-
-    if rename:
-        df = df.groupby(df.index.map(rename_techs_tyndp)).sum()
-
-    to_drop = df.index[df.abs().max(axis=1).fillna(0.0) < 10]
-    df.drop(to_drop, inplace=True)
-
-    order = preferred_order.intersection(df.index).append(
-        df.index.difference(preferred_order)
-    )
-    df = df.loc[order]
-
-    if "-imp" in scenarios:
-        # imports for methanol, kerosene and naphtha
-        df.loc["green e-fuel imports"] = 1026.64 + 546.36  # TWh
-        tech_colors["green e-fuel imports"] = "#46caf0"
-
-    return df
-def load_main_cfs(
-    scenarios=None, clusters=None, with_resolution=False, with_space=False
-):
-    if scenarios is None:
-        scenarios = MAIN_SCENARIOS
-
-    if clusters is None:
-        clusters = CLUSTERS
-
-    horizon = "2030" if "rev0" in scenarios else "2050"
-
-    df = pd.read_csv(
-        scenarios + f"/csvs/cfs.csv", header=[0, 1, 2, 3], index_col=[0, 1]
-    )
-
-    df = df.xs(horizon, level="planning_horizon", axis=1)
-
-    names = ["clusters", "lv", "onw", "h2"]
-    if with_resolution:
-        names += ("res",)
-
-    df.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c, with_resolution) for c in df.columns], names=names
-    )
-
-    if not with_space:
-        df = df.xs(str(clusters), level="clusters", axis=1)
-
-    df = df.groupby(level=1).sum()
-
-    return df
-def fix_df(df):
-    column_dict = {
-        "1.0": "w/o power grid expansion",
-        "opt": "w power grid expansion",
-        "H2 grid": "w hydrogen network",
-        "no H2 grid": "w/o hydrogen network",
-    }
-    df.rename(columns=column_dict, inplace=True)
-    df.columns = ["\n".join(col).strip() for col in df.columns.values]
-    df.sort_index(axis=1, inplace=True)
 def load_main_supply_energy(
     scenarios=None,
     clusters=None,
@@ -512,10 +392,9 @@ def load_main_supply_energy(
     if scenarios is None:
         scenarios = MAIN_SCENARIOS
 
-    if clusters is None:
-        clusters = CLUSTERS
+    clusters = CLUSTERS
 
-    horizon = "2030" if "rev0" in scenarios else "2050"
+    #horizon = "2030" if "rev0" in scenarios else "2050"
 
     df = pd.read_csv(
         scenarios + "/csvs/supply_energy.csv", index_col=[0, 1, 2], header=[0, 1, 2, 3]
@@ -533,7 +412,7 @@ def load_main_supply_energy(
         for i in df.index
     ]
 
-    df = df.xs(horizon, level="planning_horizon", axis=1)
+    #df = df.xs(horizon, level="planning_horizon", axis=1)
 
     names = ["clusters", "lv", "onw", "h2"]
     if with_resolution:
@@ -564,71 +443,8 @@ def load_main_supply_energy(
         tech_colors["green e-fuel imports"] = "#46caf0"
 
     return df
-def energy_balances(scenarios, onw=100):
-    co2_carriers = ["co2", "co2 stored", "process emissions"]
 
-    balances_df = pd.read_csv(
-        scenarios + "/csvs/supply_energy.csv", index_col=[0, 1, 2], header=[0, 1, 2, 3]
-    )
 
-    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.levels[0]}
-    balances["energy"] = [
-        i for i in balances_df.index.levels[0] if i not in co2_carriers
-    ]
-    balances["carbon"] = [i for i in balances_df.index.levels[0] if i in co2_carriers]
-
-    key = "energy"
-
-    df = balances_df.loc[balances[key]]
-
-    df = df.groupby(level=2).sum().div(1e6)
-
-    df.index = [
-        i[:-1]
-        if ((i not in ["co2", "NH3", "H2"]) and (i[-1:] in ["0", "1", "2", "3"]))
-        else i
-        for i in df.index
-    ]
-
-    df = df.groupby(rename_techs_balances).sum()
-
-    df.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "h2"]
-    )
-
-    df = df.xs((onw, str(181)), level=["onw", "clusters"], axis=1)
-
-    order = pd.Index(
-        [
-            "fossil oil and gas",
-            "hydroelectricity",
-            "biomass",
-            "offshore wind",
-            "onshore wind",
-            "solar",
-            "ambient heat",
-            "residential electricity demand",
-            "industry electricity demand",
-            "electricity demand",
-            "battery electric vehicles",
-            "heat demand",
-            "hydrogen demand",
-            "biomass demand",
-            "methane demand",
-            "liquid hydrocarbon demand",
-            "power-to-liquid",
-            "methanation",
-            "power-to-hydrogen",
-            "hot water storage",
-            "direct air capture",
-            "other",
-        ]
-    )
-
-    order = order.intersection(df.index).append(df.index.difference(order))
-    df = df.loc[order]
-
-    return df
 def carbon_balances(scenarios, onw=100):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
@@ -661,7 +477,7 @@ def carbon_balances(scenarios, onw=100):
         [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "h2"]
     )
 
-    df = df.xs((onw, str(181)), level=["onw", "clusters"], axis=1)
+    df = df.xs((onw, str(CLUSTERS)), level=["onw", "clusters"], axis=1)
 
     df.drop("co2", inplace=True)
 
@@ -690,6 +506,8 @@ def carbon_balances(scenarios, onw=100):
     df = df.loc[df.abs().max(axis=1) > 0.01]
 
     return df
+
+
 def rename_techs_h2_balances(tech):
     if tech == "H2 for industry":
         return "hydrogen for industry"
@@ -706,12 +524,13 @@ def rename_techs_h2_balances(tech):
     else:
         return tech
 
+
 SCENARIOS = {
-    (0, 0, 0, 0): (MAIN_SCENARIOS, 100),
+    (0, 0, 0, 0): (MAIN_SCENARIOS, 100), 
     (1, 0, 0, 0): (COST_SCENARIOS, 100),
     (0, 1, 0, 0): (IMP_SCENARIOS, 100),
     (0, 0, 1, 0): (SHP_SCENARIOS, 100),
-    (0, 0, 0, 1): (MAIN_SCENARIOS, 0),
+    (0, 0, 0, 1): (MAIN_SCENARIOS, 100),
 }
 
 NAMES = ["optimistic_costs", "imports", "hydrogen_in_shipping", "no_onwind"]
@@ -742,6 +561,7 @@ co2 = pd.concat(
 co2.index.names = co2.index.names[:-1] + ["carrier"]
 co2 = co2.stack([0, 1]).to_xarray()
 co2.name = "co2"
+
 def read_capacities(scenarios, onw):
     gw, twh = load_main_capacities(scenarios, merge=False)
 
@@ -752,6 +572,7 @@ def read_capacities(scenarios, onw):
 
     con = gw.loc[["links"]].groupby(level=1).sum()
     return gen, con, twh
+
 cap = pd.concat(
     {
         k: pd.concat(
@@ -762,6 +583,7 @@ cap = pd.concat(
     },
     names=NAMES,
 )
+
 cap.index.names = cap.index.names[:-2] + ["category", "carrier"]
 cap = cap.stack([0, 1]).unstack("category").to_xarray()
 ds = xr.merge([tsc, energy, co2, cap]).round(2)
