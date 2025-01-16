@@ -32,13 +32,13 @@ xr.set_options(display_style="html")
 
 CLUSTERS = 39
 
-MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results-archive/fneum-h2-network-cost-test"
-IMP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results-archive/fneum-h2-network-cost-test"
-SHP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results-archive/fneum-h2-network-cost-test"
-COST_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results-archive/fneum-h2-network-cost-test"
+MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+IMP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+SHP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+COST_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
 	
 
-def parse_index(c, with_resolution=False):
+def parse_index(c):
     clusters = c[0]
 
     lv = c[1]
@@ -46,39 +46,35 @@ def parse_index(c, with_resolution=False):
     match = re.search(r"onwind\+p([0-9.]*)", c[2])
     onw = 100.0 if match is None else 100 * float(match.groups()[0])
 
-    h2 = "no H2 grid" if "noH2network" in c[2] else "H2 grid"
+    #h2 = "no H2 grid" if "noH2network" in c[2] else "H2 grid"
+    h2 = c[3]
 
     to_return = (clusters, lv, onw, h2)
-
-    if with_resolution:
-        match = re.findall(r"(\d+)H", c[2])
-        to_return += (int(match[0]),)
 
     return to_return
 
 	
 def load_main(
-    scenarios=None, clusters=None, rename=True, with_resolution=False, with_space=False
+    scenarios=None, clusters=None, rename=True, with_space=False
 ):
     if scenarios is None:
         scenarios = MAIN_SCENARIOS
 
     clusters = CLUSTERS
 
-    horizon = "2030" if "rev0" in scenarios else "2050"
+    #horizon = "2030" if "rev0" in scenarios else "2050"
 
     costs = pd.read_csv(
         scenarios + f"/csvs/costs.csv", header=[0, 1, 2, 3], index_col=[0, 1, 2]
     )
 
-    costs = costs.xs(horizon, level="planning_horizon", axis=1)
+    #costs = costs.xs(horizon, level="planning_horizon", axis=1)
 
-    names = ["clusters", "lv", "onw", "h2"]
-    if with_resolution:
-        names += ("res",)
+    #names = ["clusters", "lv", "onw", "planning_horizon"]
+    names = ["clusters", "lv", "onw", "H2"]
 
     costs.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c, with_resolution) for c in costs.columns], names=names
+        [parse_index(c) for c in costs.columns], names=names
     )
 
     if not with_space:
@@ -90,6 +86,7 @@ def load_main(
     print(to_drop)
     df.drop(to_drop, inplace=True)
 
+    # H2G-A: Probably change neccessary
     if "-imp" in scenarios:
         # imports for methanol, kerosene and naphtha at 120 €/MWh
         print("add import costs")
@@ -99,7 +96,7 @@ def load_main(
 
     
 SCENARIOS = {
-    (0, 0, 0, 0): (MAIN_SCENARIOS, 100), #100 will not work
+    (0, 0, 0, 0): (MAIN_SCENARIOS, 100), 
     (1, 0, 0, 0): (COST_SCENARIOS, 100),
     (0, 1, 0, 0): (IMP_SCENARIOS, 100),
     (0, 0, 1, 0): (SHP_SCENARIOS, 100),
@@ -115,13 +112,14 @@ tsc = pd.concat(
     },
     names=NAMES,
 )
+tsc = tsc.xs("vopt", level="lv", axis=1)
 
 tsc.index.names = tsc.index.names[:-1] + ["carrier"]
-tsc = tsc.stack([0, 1]).to_xarray()
+tsc = tsc.stack([0]).to_xarray()
 tsc.name = "costs"
 
 ds = xr.merge([tsc]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
-ds.to_netcdf("scenarios.nc", encoding=encoding)
+ds.to_netcdf("scenarios_myopic.nc", encoding=encoding)
 
