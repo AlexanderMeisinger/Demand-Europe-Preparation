@@ -66,6 +66,31 @@ def rename_techs_tyndp(tech):
     else:
         return tech
     
+def rename_techs_carbon_balances(tech):
+    prefix_to_remove = [
+        "residential ",
+        "services ",
+        "urban ",
+        "rural ",
+        "central ",
+        "decentral ",
+    ]
+    for ptr in prefix_to_remove:
+        if tech[: len(ptr)] == ptr:
+            tech = tech[len(ptr) :]
+    if tech == "biogas to gas":
+        return "biogas upgrading"
+    elif tech == "agriculture machinery oil emissions":
+        return "agriculture machinery"
+    elif tech == "shipping methanol emissions":
+        return "shipping fuels"
+    elif tech == "DAC":
+        return "direct air capture"
+    elif "SMR" in tech:
+        return tech.replace("SMR", "steam methane reforming")
+    else:
+        return tech
+    
 preferred_order = pd.Index(
     [
         "transmission lines",
@@ -234,6 +259,68 @@ def load_main_supply_energy(
 
     return df
 
+def carbon_balances(scenarios, onw=100):
+    co2_carriers = ["co2", "co2 stored", "process emissions"]
+
+    balances_df = pd.read_csv(
+        scenarios + "/csvs/supply_energy.csv", index_col=[0, 1, 2], header=[0, 1, 2, 3]
+    )
+
+    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.levels[0]}
+    balances["energy"] = [
+        i for i in balances_df.index.levels[0] if i not in co2_carriers
+    ]
+    balances["carbon"] = [i for i in balances_df.index.levels[0] if i in co2_carriers]
+
+    key = "co2"
+
+    df = balances_df.loc[balances[key]]
+
+    df = df.groupby(level=2).sum().div(1e6)
+
+    df.index = [
+        i[:-1]
+        if ((i not in ["co2", "NH3", "H2"]) and (i[-1:] in ["0", "1", "2", "3"]))
+        else i
+        for i in df.index
+    ]
+
+    df = df.groupby(rename_techs_carbon_balances).sum()
+
+    df.columns = pd.MultiIndex.from_tuples(
+        [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "h2"]
+    )
+
+    df = df.xs((onw, str(39)), level=["onw", "clusters"], axis=1)
+
+    df.drop("co2", inplace=True)
+
+    order = pd.Index(
+        [
+            "liquid hydrocarbons emissions",
+            "methanol emissions",
+            "process emissions CC",
+            "gas for industry CC",
+            "gas CHP CC",
+            "gas CHP",
+            "OCGT",
+            "gas boiler",
+            "steam methane reforming",
+            "steam methane reforming CC",
+            "biogas upgrading",
+            "solid biomass CHP CC",
+            "solid biomass for industry CC",
+            "direct air capture",
+        ]
+    )
+
+    order = order.intersection(df.index).append(df.index.difference(order))
+    df = df.loc[order]
+
+    df = df.loc[df.abs().max(axis=1) > 0.01]
+
+    return df
+
     
 SCENARIOS = {
     (0, 0, 0, 0): (MAIN_SCENARIOS, 100), 
@@ -271,7 +358,16 @@ energy.index.names = energy.index.names[:-1] + ["carrier"]
 energy = energy.stack([0]).to_xarray()
 energy.name = "energy"
 
-ds = xr.merge([tsc, energy]).round(2)
+co2 = pd.concat(
+    {k: carbon_balances(scenarios, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    names=NAMES,
+)
+
+co2.index.names = co2.index.names[:-1] + ["carrier"]
+co2 = co2.stack([0, 1]).to_xarray()
+co2.name = "co2"
+
+ds = xr.merge([tsc, energy, co2]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
 ds.to_netcdf("scenarios_myopic.nc", encoding=encoding)
