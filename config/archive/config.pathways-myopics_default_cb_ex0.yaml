@@ -21,7 +21,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: "myopic"
-  name: "myopic-default-2025-2050-5-T-H-B-I-A-cb_ex0"
+  name: "myopic-default-2025-2050-5-T-H-B-I-A-cb_1.5"
   scenarios:
     enable: false
     file: config/scenarios.yaml

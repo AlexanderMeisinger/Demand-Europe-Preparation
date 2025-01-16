@@ -200,7 +200,7 @@ def load_main(
 def load_main_capacities(
     scenarios=None,
     clusters=None,
-    rename=True,
+    rename=False,
     with_resolution=False,
     with_space=False,
     merge=True,
@@ -248,6 +248,7 @@ def load_main_capacities(
         "fossil oil and gas",
         "solid biomass",
     ]
+    
     twh.drop(twh.index.intersection(to_drop), inplace=True)
 
     gw = df.drop(["stores", "lines"]).div(1e3)  # GW
@@ -341,7 +342,7 @@ def load_main_supply_energy(
     return df
 
 # Double check carbon_balances
-def carbon_balances(scenarios, onw=100):
+def carbon_balances(scenarios):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
     balances_df = pd.read_csv(
@@ -372,7 +373,7 @@ def carbon_balances(scenarios, onw=100):
     df.columns = pd.MultiIndex.from_tuples(
         [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "h2"]
     )
-
+    onw=100
     df = df.xs((onw, str(39)), level=["onw", "clusters"], axis=1)
 
     df.drop("co2", inplace=True)
@@ -441,7 +442,7 @@ energy = energy.stack([0]).to_xarray()
 energy.name = "energy"
 
 co2 = pd.concat(
-    {k: carbon_balances(scenarios, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    {k: carbon_balances(scenarios) for k, (scenarios, onw) in SCENARIOS.items()},
     names=NAMES,
 )
 
