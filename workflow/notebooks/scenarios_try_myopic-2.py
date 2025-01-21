@@ -4,7 +4,6 @@ import cartopy
 import sys
 import re
 import os
-
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -13,13 +12,11 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib as mpl
-
 from itertools import product
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch
 import matplotlib.patches as mpatches
 from matplotlib.transforms import Bbox
-
 from vresutils.costdata import annuity
 
 PATH = "/mnt/e/H2GMA/Github/Europe/pypsa-eur"
