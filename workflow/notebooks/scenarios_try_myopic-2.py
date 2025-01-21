@@ -1,3 +1,6 @@
+# This document prepares the result from PyPSA-Eur for Streamlit
+# Base: https://doi.org/10.1016/j.joule.2023.06.016 and https://github.com/PyPSA/pypsa-eur
+
 import pypsa
 import yaml
 import cartopy
@@ -19,7 +22,13 @@ import matplotlib.patches as mpatches
 from matplotlib.transforms import Bbox
 from vresutils.costdata import annuity
 
+# Set path for script imports, config settings and clusters
 PATH = "/mnt/e/H2GMA/Github/Europe/pypsa-eur"
+
+with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/config.myopic_main.yaml") as file:
+    config = yaml.safe_load(file)
+
+CLUSTERS = 39
 
 sys.path.append(os.path.join(PATH, "scripts/"))
 from _helpers import rename_techs
@@ -27,17 +36,7 @@ from _helpers import rename_techs
 xr.set_options(display_style="html")
 
 
-CLUSTERS = 39
-
-MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
-IMP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
-NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-noh2grid-2025-2050-5-T-H-B-I-A"
-LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-low_carbon_budget-2025-2050-5-T-H-B-I-A"
-
-with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/config.myopic_main.yaml") as file:
-    config = yaml.safe_load(file)
-
-
+# Define technology names
 def rename_techs_tyndp(tech):
     tech = rename_techs(tech)
     if "heat pump" in tech or "resistive heater" in tech:
@@ -68,6 +67,7 @@ def rename_techs_tyndp(tech):
         return tech
     
 
+# Define order of technologies
 preferred_order = pd.Index(
     [
         "transmission lines",
@@ -119,6 +119,7 @@ preferred_order = pd.Index(
 )
 
 
+# Set index for streamlit scenario settings
 def parse_index(c, with_resolution=False):
     clusters = c[0]
 
@@ -127,7 +128,6 @@ def parse_index(c, with_resolution=False):
     match = re.search(r"onwind\+p([0-9.]*)", c[2])
     onw = 100.0 if match is None else 100 * float(match.groups()[0])
 
-    #h2 = "no H2 grid" if "noH2network" in c[2] else "H2 grid"
     h2 = c[3]
 
     to_return = (clusters, lv, onw, h2)
@@ -139,6 +139,7 @@ def parse_index(c, with_resolution=False):
     return to_return
 
 
+# Output of generation, storage and converion capacities
 def load_main_capacities(
     scenarios=None,
     clusters=None,
@@ -152,13 +153,9 @@ def load_main_capacities(
 
     clusters = CLUSTERS
 
-    #horizon = "2030" if "rev0" in scenarios else "2050"
-
     df = pd.read_csv(
         scenarios + f"/csvs/capacities.csv", header=[0, 1, 2, 3], index_col=[0, 1]
     )
-
-    #df = df.xs(horizon, level="planning_horizon", axis=1)
 
     names = ["clusters", "lv", "onw", "h2"]
     if with_resolution:
@@ -221,6 +218,7 @@ def load_main_capacities(
     return gw, twh
 
 
+# Output of energy balances
 def energy_balances(scenarios, sector, onw=100):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
@@ -282,6 +280,7 @@ def energy_balances(scenarios, sector, onw=100):
     return df 
 
 
+# Out of total costs
 def costs(scenarios, onw=100):
     cost_df = pd.read_csv(
         scenarios + "/csvs/costs.csv", index_col=list(range(3)), header=[0, 1, 2, 3]
@@ -312,54 +311,7 @@ def costs(scenarios, onw=100):
     
     return df
 
-
-SCENARIOS = {
-    (0, 0): (MAIN_SCENARIOS, 100), 
-    (1, 0): (LOWCARBON_SCENARIOS, 100),
-    #(0, 1, 0, 0): (IMP_SCENARIOS, 100),
-    (0, 1): (NOH2GRID_SCENARIOS, 100),
-    #(0, 0, 0, 1): (MAIN_SCENARIOS, 100),
-}
-
-NAMES = ["low_carbon", "no_h2grid"]
-
-cost = pd.concat(
-    {k: costs(scenarios, onw) for k, (scenarios, onw) in SCENARIOS.items()},
-    names=NAMES,
-)
-cost.index.names = cost.index.names[:-1] + ["carrier"]
-cost = cost.stack([0, 1]).to_xarray()
-cost.name = "costs"
-
-
-energy = pd.concat(
-    {k: energy_balances(scenarios, "energy", onw) for k, (scenarios, onw) in SCENARIOS.items()},
-    names=NAMES,
-)
-
-energy.index.names = energy.index.names[:-1] + ["carrier"]
-energy = energy.stack([0, 1]).to_xarray()
-energy.name = "energy"
-
-co2 = pd.concat(
-    {k: energy_balances(scenarios, "co2", onw) for k, (scenarios, onw) in SCENARIOS.items()},
-    names=NAMES,
-)
-
-co2.index.names = co2.index.names[:-1] + ["carrier"]
-co2 = co2.stack([0, 1]).to_xarray()
-co2.name = "co2"
-
-h2 = pd.concat(
-    {k: energy_balances(scenarios, "H2", onw) for k, (scenarios, onw) in SCENARIOS.items()},
-    names=NAMES,
-)
-
-h2.index.names = h2.index.names[:-1] + ["carrier"]
-h2 = h2.stack([0, 1]).to_xarray()
-h2.name = "hydrogen"
-
-
+#  Read capacities of generators, storage units and conversions
 def read_capacities(scenarios, onw):
     gw, twh = load_main_capacities(scenarios, merge=False)
 
@@ -371,6 +323,63 @@ def read_capacities(scenarios, onw):
     con = gw.loc[["links"]].groupby(level=1).sum()
     return gen, con, twh
 
+
+# Settings
+# Set path for scenarios
+MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+IMP_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
+NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-noh2grid-2025-2050-5-T-H-B-I-A"
+LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-low_carbon_budget-2025-2050-5-T-H-B-I-A"
+
+# Config settings for scenario
+SCENARIOS = {
+    (0, 0): (MAIN_SCENARIOS, 100), 
+    (1, 0): (LOWCARBON_SCENARIOS, 100),
+    (0, 1): (NOH2GRID_SCENARIOS, 100),
+}
+NAMES = ["low_carbon", "no_h2grid"]
+
+# Cost preparation
+cost = pd.concat(
+    {k: costs(scenarios, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    names=NAMES,
+)
+cost.index.names = cost.index.names[:-1] + ["carrier"]
+cost = cost.stack([0, 1]).to_xarray()
+cost.name = "costs"
+
+# Energy balance preparation
+energy = pd.concat(
+    {k: energy_balances(scenarios, "energy", onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    names=NAMES,
+)
+
+energy.index.names = energy.index.names[:-1] + ["carrier"]
+energy = energy.stack([0, 1]).to_xarray()
+energy.name = "energy"
+
+# CO2 balance preparation
+co2 = pd.concat(
+    {k: energy_balances(scenarios, "co2", onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    names=NAMES,
+)
+
+co2.index.names = co2.index.names[:-1] + ["carrier"]
+co2 = co2.stack([0, 1]).to_xarray()
+co2.name = "co2"
+
+# H2 balance preparation
+h2 = pd.concat(
+    {k: energy_balances(scenarios, "H2", onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    names=NAMES,
+)
+
+h2.index.names = h2.index.names[:-1] + ["carrier"]
+h2 = h2.stack([0, 1]).to_xarray()
+h2.name = "hydrogen"
+
+
+# Generation, storage and conversion capacity preparation
 cap = pd.concat(
     {
         k: pd.concat(
@@ -384,6 +393,9 @@ cap = pd.concat(
 
 cap.index.names = cap.index.names[:-2] + ["category", "carrier"]
 cap = cap.stack([0, 1]).unstack("category").to_xarray()
+
+
+# Merge and output all data
 ds = xr.merge([cost, energy, co2, h2, cap]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
