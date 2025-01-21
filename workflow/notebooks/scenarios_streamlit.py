@@ -1,4 +1,5 @@
 # This document prepares the result from PyPSA-Eur for Streamlit
+# Author: Alexander Meisinger
 # Base: https://doi.org/10.1016/j.joule.2023.06.016 and https://github.com/PyPSA/pypsa-eur
 
 import pypsa
