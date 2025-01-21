@@ -248,57 +248,6 @@ def parse_index(c, with_resolution=False):
     return to_return
 
 
-def load_main(
-    scenarios=None, clusters=None, rename=True, with_resolution=False, with_space=False
-):
-    if scenarios is None:
-        scenarios = MAIN_SCENARIOS
-
-    clusters = CLUSTERS
-
-    #horizon = "2030" if "rev0" in scenarios else "2050"
-
-    costs = pd.read_csv(
-        scenarios + f"/csvs/costs.csv", header=[0, 1, 2, 3], index_col=[0, 1, 2]
-    )
-
-    #costs = costs.xs(horizon, level="planning_horizon", axis=1)
-
-    names = ["clusters", "lv", "onw", "h2"]
-    if with_resolution:
-        names += ("res",)
-
-    costs.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c, with_resolution) for c in costs.columns], names=names
-    )
-
-    if not with_space:
-        costs = costs.xs(str(clusters), level="clusters", axis=1)
-
-    df = costs.groupby(level=2).sum().div(1e9)
-
-    if rename:
-        df = df.groupby(df.index.map(rename_techs_tyndp)).sum()
-
-    to_drop = df.index[df.max(axis=1) < config["plotting"]["costs_threshold"]]
-    print(to_drop)
-    df.drop(to_drop, inplace=True)
-
-    order = preferred_order.intersection(df.index).append(
-        df.index.difference(preferred_order)
-    )
-    df = df.loc[order]
-
-    # H2G-A: Probably change neccessary
-    if "-imp" in scenarios:
-        # imports for methanol, kerosene and naphtha at 120 €/MWh
-        print("add import costs")
-        df.loc["green e-fuel imports"] = (1026.64 + 546.36) * 120e6 / 1e9  # bn€/a
-        tech_colors["green e-fuel imports"] = "#46caf0"
-
-    return df
-
-
 def load_main_capacities(
     scenarios=None,
     clusters=None,
@@ -569,6 +518,37 @@ def energy_balances(scenarios, sector, onw=100):
     return df 
 
 
+def costs(scenarios, onw=100):
+    cost_df = pd.read_csv(
+        scenarios + "/csvs/costs.csv", index_col=list(range(3)), header=[0, 1, 2, 3]
+    )
+
+    df = cost_df.groupby(cost_df.index.get_level_values(2)).sum()
+
+    # convert to billions
+    df = df / 1e9
+
+    df = df.groupby(df.index.map(rename_techs)).sum()
+
+    to_drop = df.index[df.max(axis=1) < config["plotting"]["costs_threshold"]]
+
+    df = df.drop(to_drop)
+
+    df.columns = pd.MultiIndex.from_tuples(
+                [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "h2"]
+            )
+
+    df = df.xs((onw, str(CLUSTERS)), level=["onw", "clusters"], axis=1)
+
+    new_index = preferred_order.intersection(df.index).append(
+        df.index.difference(preferred_order)
+    )
+
+    df = df.loc[new_index]
+    
+    return df
+
+
 def rename_techs_h2_balances(tech):
     if tech == "H2 for industry":
         return "hydrogen for industry"
@@ -595,31 +575,40 @@ SCENARIOS = {
 }
 
 NAMES = ["low_carbon", "no_h2grid"]
-tsc = pd.concat(
-    {
-        k: load_main(scenarios).xs(onw, level="onw", axis=1)
-        for k, (scenarios, onw) in SCENARIOS.items()
-    },
+
+cost = pd.concat(
+    {k: costs(scenarios, onw) for k, (scenarios, onw) in SCENARIOS.items()},
     names=NAMES,
 )
-tsc.index.names = tsc.index.names[:-1] + ["carrier"]
-tsc = tsc.stack([0, 1]).to_xarray()
-tsc.name = "costs"
+cost.index.names = cost.index.names[:-1] + ["carrier"]
+cost = cost.stack([0, 1]).to_xarray()
+cost.name = "costs"
+
+#energy = pd.concat(
+#    {
+#        k: load_main_supply_energy(scenarios).xs(onw, level="onw", axis=1)
+#        for k, (scenarios, onw) in SCENARIOS.items()
+#    },
+#    names=NAMES,
+#)
+#energy.index.names = energy.index.names[:-1] + ["carrier"]
+#energy = energy.stack([0, 1]).to_xarray()
+#energy.name = "energy"
+
 energy = pd.concat(
-    {
-        k: load_main_supply_energy(scenarios).xs(onw, level="onw", axis=1)
-        for k, (scenarios, onw) in SCENARIOS.items()
-    },
+    {k: energy_balances(scenarios, "energy", onw) for k, (scenarios, onw) in SCENARIOS.items()},
     names=NAMES,
 )
+
 energy.index.names = energy.index.names[:-1] + ["carrier"]
 energy = energy.stack([0, 1]).to_xarray()
 energy.name = "energy"
 
 co2 = pd.concat(
-    {k: carbon_balances(scenarios, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    {k: energy_balances(scenarios, "co2", onw) for k, (scenarios, onw) in SCENARIOS.items()},
     names=NAMES,
 )
+
 co2.index.names = co2.index.names[:-1] + ["carrier"]
 co2 = co2.stack([0, 1]).to_xarray()
 co2.name = "co2"
@@ -658,7 +647,7 @@ cap = pd.concat(
 
 cap.index.names = cap.index.names[:-2] + ["category", "carrier"]
 cap = cap.stack([0, 1]).unstack("category").to_xarray()
-ds = xr.merge([tsc, energy, co2, h2, cap]).round(2)
+ds = xr.merge([cost, energy, co2, h2, cap]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
-ds.to_netcdf("scenarios-h2.nc", encoding=encoding)
+ds.to_netcdf("scenarios-h2-co2-energy-costs.nc", encoding=encoding)
