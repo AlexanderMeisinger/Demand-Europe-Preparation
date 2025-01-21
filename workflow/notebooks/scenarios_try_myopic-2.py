@@ -330,69 +330,6 @@ def load_main_capacities(
     return gw, twh
 
 
-def carbon_balances(scenarios, onw=100):
-    co2_carriers = ["co2", "co2 stored", "process emissions"]
-
-    balances_df = pd.read_csv(
-        scenarios + "/csvs/supply_energy.csv", index_col=[0, 1, 2], header=[0, 1, 2, 3]
-    )
-
-    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.levels[0]}
-    balances["energy"] = [
-        i for i in balances_df.index.levels[0] if i not in co2_carriers
-    ]
-    balances["carbon"] = [i for i in balances_df.index.levels[0] if i in co2_carriers]
-
-    key = "co2"
-
-    df = balances_df.loc[balances[key]]
-
-    df = df.groupby(level=2).sum().div(1e6)
-
-    df.index = [
-        i[:-1]
-        if ((i not in ["co2", "NH3", "H2"]) and (i[-1:] in ["0", "1", "2", "3"]))
-        else i
-        for i in df.index
-    ]
-
-    df = df.groupby(rename_techs_carbon_balances).sum()
-
-    df.columns = pd.MultiIndex.from_tuples(
-        [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "h2"]
-    )
-
-    df = df.xs((onw, str(CLUSTERS)), level=["onw", "clusters"], axis=1)
-
-    df.drop("co2", inplace=True)
-
-    order = pd.Index(
-        [
-            "liquid hydrocarbons emissions",
-            "methanol emissions",
-            "process emissions CC",
-            "gas for industry CC",
-            "gas CHP CC",
-            "gas CHP",
-            "OCGT",
-            "gas boiler",
-            "steam methane reforming",
-            "steam methane reforming CC",
-            "biogas upgrading",
-            "solid biomass CHP CC",
-            "solid biomass for industry CC",
-            "direct air capture",
-        ]
-    )
-
-    order = order.intersection(df.index).append(df.index.difference(order))
-    df = df.loc[order]
-
-    df = df.loc[df.abs().max(axis=1) > 0.01]
-
-    return df
-
-
 def energy_balances(scenarios, sector, onw=100):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
