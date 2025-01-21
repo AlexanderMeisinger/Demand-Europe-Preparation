@@ -508,7 +508,7 @@ def carbon_balances(scenarios, onw=100):
     return df
 
 
-def hydrogen_balances(scenarios, onw=100):
+def energy_balances(scenarios, sector, onw=100):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
     balances_df = pd.read_csv(
@@ -521,7 +521,7 @@ def hydrogen_balances(scenarios, onw=100):
     ]
 
     for k, v in balances.items():
-        if k == "H2":
+        if k == sector:
             df = balances_df.loc[v]
             df = df.groupby(df.index.get_level_values(2)).sum()
 
@@ -566,7 +566,7 @@ def hydrogen_balances(scenarios, onw=100):
 
             df = df.loc[new_index, new_columns]
 
-            return df    
+    return df 
 
 
 def rename_techs_h2_balances(tech):
@@ -625,9 +625,10 @@ co2 = co2.stack([0, 1]).to_xarray()
 co2.name = "co2"
 
 h2 = pd.concat(
-    {k: hydrogen_balances(scenarios, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+    {k: energy_balances(scenarios, "H2", onw) for k, (scenarios, onw) in SCENARIOS.items()},
     names=NAMES,
 )
+
 h2.index.names = h2.index.names[:-1] + ["carrier"]
 h2 = h2.stack([0, 1]).to_xarray()
 h2.name = "hydrogen"
