@@ -400,4 +400,4 @@ cap = cap.stack([0, 1]).unstack("category").to_xarray()
 ds = xr.merge([cost, energy, co2, h2, cap]).round(2)
 comp = dict(zlib=True, complevel=9)
 encoding = {var: comp for var in ds.data_vars}
-ds.to_netcdf("scenarios-h2-co2-energy-costs.nc", encoding=encoding)
+ds.to_netcdf("scenarios_streamlit.nc", encoding=encoding)
