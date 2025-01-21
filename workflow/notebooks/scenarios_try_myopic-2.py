@@ -37,26 +37,6 @@ LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopi
 with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/config.myopic_main.yaml") as file:
     config = yaml.safe_load(file)
 
-#ToDo: Check and adapt tech_colors
-tech_colors = config["plotting"]["tech_colors"]
-tech_colors["battery electric vehicles"] = tech_colors["BEV charger"]
-tech_colors["other"] = "#454545"
-tech_colors["building heat demand"] = tech_colors["heat"]
-tech_colors["ambient heat"] = tech_colors["heat pump"]
-tech_colors["residential electricity demand"] = "#72709c"
-tech_colors["industry electricity demand"] = tech_colors["electricity"]
-tech_colors["hydrogen demand"] = tech_colors["land transport fuel cell"]
-tech_colors["agriculture machinery"] = tech_colors["land transport fuel cell"]
-#tech_colors["methane demand"] = tech_colors["helmeth"] #ToDo: Adapt
-tech_colors["liquid hydrocarbon demand"] = tech_colors["kerosene for aviation"]
-tech_colors["aviation fuels"] = tech_colors["kerosene for aviation"]
-tech_colors["shipping fuels"] = tech_colors["shipping methanol"]
-tech_colors["biomass demand"] = tech_colors["biogas"]
-tech_colors["biogas upgrading"] = tech_colors["biogas"]
-tech_colors["hydrogen for industry"] = tech_colors["H2 for industry"]
-tech_colors["hydrogen-to-power/heat"] = tech_colors["gas-to-power/heat"]
-tech_colors["hydrogen for land transport"] = "#8487e8"
-
 
 def rename_techs_tyndp(tech):
     tech = rename_techs(tech)
@@ -148,32 +128,6 @@ def rename_techs_balances(tech):
         return tech
     
 
-def rename_techs_carbon_balances(tech):
-    prefix_to_remove = [
-        "residential ",
-        "services ",
-        "urban ",
-        "rural ",
-        "central ",
-        "decentral ",
-    ]
-    for ptr in prefix_to_remove:
-        if tech[: len(ptr)] == ptr:
-            tech = tech[len(ptr) :]
-    if tech == "biogas to gas":
-        return "biogas upgrading"
-    elif tech == "agriculture machinery oil emissions":
-        return "agriculture machinery"
-    elif tech == "shipping methanol emissions":
-        return "shipping fuels"
-    elif tech == "DAC":
-        return "direct air capture"
-    elif "SMR" in tech:
-        return tech.replace("SMR", "steam methane reforming")
-    else:
-        return tech
-    
-
 preferred_order = pd.Index(
     [
         "transmission lines",
@@ -223,6 +177,22 @@ preferred_order = pd.Index(
         "direct air capture",
     ]
 )
+
+def rename_techs_h2_balances(tech):
+    if tech == "H2 for industry":
+        return "hydrogen for industry"
+    elif tech == "Sabatier":
+        return "methanation"
+    elif tech == "H2 Electrolysis":
+        return "power-to-hydrogen"
+    elif tech == "land transport fuel cell":
+        return "hydrogen for land transport"
+    elif tech == "H2 Fuel Cell":
+        return "hydrogen-to-power/heat"
+    elif "SMR" in tech:
+        return tech.replace("SMR", "steam methane reforming")
+    else:
+        return tech
 
 
 def parse_index(c, with_resolution=False):
@@ -417,23 +387,6 @@ def costs(scenarios, onw=100):
     df = df.loc[new_index]
     
     return df
-
-
-def rename_techs_h2_balances(tech):
-    if tech == "H2 for industry":
-        return "hydrogen for industry"
-    elif tech == "Sabatier":
-        return "methanation"
-    elif tech == "H2 Electrolysis":
-        return "power-to-hydrogen"
-    elif tech == "land transport fuel cell":
-        return "hydrogen for land transport"
-    elif tech == "H2 Fuel Cell":
-        return "hydrogen-to-power/heat"
-    elif "SMR" in tech:
-        return tech.replace("SMR", "steam methane reforming")
-    else:
-        return tech
 
 
 SCENARIOS = {
