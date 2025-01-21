@@ -67,67 +67,7 @@ def rename_techs_tyndp(tech):
     else:
         return tech
     
-
-def rename_techs_balances(tech):
-    tech = rename_techs(tech)
-    if "heat pump" in tech:
-        return "ambient heat"
-    elif tech in ["H2 Electrolysis"]:  # , "H2 liquefaction"]:
-        return "power-to-hydrogen"
-    elif "solar" in tech:
-        return "solar"
-    elif tech in ["Fischer-Tropsch", "methanolisation"]:
-        return "power-to-liquid"
-    elif tech == "DAC":
-        return "direct air capture"
-    elif "offshore wind" in tech:
-        return "offshore wind"
-    elif tech == "oil" or tech == "gas":
-        return "fossil oil and gas"
-    elif tech in ["BEV charger", "V2G", "Li ion", "land transport EV"]:
-        return "battery electric vehicles"
-    elif tech in ["biogas", "solid biomass"]:
-        return "biomass"
-    elif tech in ["electricity"]:
-        return "residential electricity demand"
-    elif tech in ["industry electricity", "agriculture electricity"]:
-        return "industry electricity demand"
-    elif tech in ["agriculture heat", "heat", "low-temperature heat for industry"]:
-        return "heat demand"
-    elif "solid biomass for industry" in tech:
-        return "biomass demand"
-    elif "gas for industry" in tech:
-        return "methane demand"
-    elif tech in ["H2 for industry", "land transport fuel cell"]:
-        return "hydrogen demand"
-    elif tech in [
-        "kerosene for aviation",
-        "naphtha for industry",
-        "shipping methanol",
-        "agriculture machinery oil",
-    ]:
-        return "liquid hydrocarbon demand"
-    elif tech in [
-        "transmission lines",
-        "H2 pipeline",
-        "H2 pipeline retrofitted",
-        "H2",
-        "electricity distribution grid",
-        "SMR",
-        "SMR CC",
-        "OCGT",
-        "CHP",
-        "gas boiler",
-        "H2 Fuel Cell",
-        "resistive heater",
-        "battery storage",
-        "methanation",
-    ]:
-        return "other"
-    else:
-        return tech
     
-
 preferred_order = pd.Index(
     [
         "transmission lines",
