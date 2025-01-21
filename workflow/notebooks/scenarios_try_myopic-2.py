@@ -508,6 +508,96 @@ def carbon_balances(scenarios, onw=100):
     return df
 
 
+def plot_balances(run_name, config, n_header):
+    co2_carriers = ["co2", "co2 stored", "process emissions"]
+
+    balances_df = pd.read_csv(
+        f"../../../pypsa-eur/results/myopic/{run_name}/csvs/supply_energy.csv", index_col=list(range(3)), header=list(range(n_header))
+    )
+
+    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.levels[0]}
+    balances["energy"] = [
+        i for i in balances_df.index.levels[0] if i not in co2_carriers
+    ]
+
+    for k, v in balances.items():
+        df = balances_df.loc[v]
+        df = df.groupby(df.index.get_level_values(2)).sum()
+
+        # convert MWh to TWh
+        df = df / 1e6
+
+        # remove trailing link ports
+        df.index = [
+            (
+                i[:-1]
+                if (
+                    (i not in ["co2", "NH3", "H2"])
+                    and (i[-1:] in ["0", "1", "2", "3", "4"])
+                )
+                else i
+            )
+            for i in df.index
+        ]
+
+        df = df.groupby(df.index.map(rename_techs)).sum()
+
+        to_drop = df.index[
+            df.abs().max(axis=1) < config["plotting"]["energy_threshold"] / 10
+        ]
+
+        units = "MtCO2/a" if v[0] in co2_carriers else "TWh/a"
+
+        df = df.drop(to_drop)
+
+        if df.empty:
+            continue
+
+        new_index = preferred_order.intersection(df.index).append(
+            df.index.difference(preferred_order)
+        )
+
+        new_columns = df.columns.sort_values()
+
+        fig, ax = plt.subplots(figsize=(12, 8))
+
+        df.loc[new_index, new_columns].T.plot(
+            kind="bar",
+            ax=ax,
+            stacked=True,
+            color=[config["plotting"]["tech_colors"][i] for i in new_index],
+        )
+        
+        handles, labels = ax.get_legend_handles_labels() 
+
+        # Map the labels to their nice names
+        labels = [nice_names.get(label, label) for label in labels]
+
+        handles.reverse()
+        labels.reverse()
+
+        if v[0] in co2_carriers:
+            ax.set_ylabel("CO2 [MtCO2/a]")
+        else:
+            ax.set_ylabel("Energy [TWh/a]")
+
+        ax.set_xlabel("")
+
+        ax.grid(axis="x")
+
+        ax.legend(
+            handles,
+            labels,
+            ncol=1,
+            loc="upper left",
+            bbox_to_anchor=[1, 1],
+            frameon=False,
+        )
+
+        fig.savefig(f"../results/{run_name}/balances/" + k + ".svg", bbox_inches="tight")
+        plt.close(fig)
+
+
 def rename_techs_h2_balances(tech):
     if tech == "H2 for industry":
         return "hydrogen for industry"
