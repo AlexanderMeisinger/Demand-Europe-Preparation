@@ -587,14 +587,14 @@ def rename_techs_h2_balances(tech):
 
 
 SCENARIOS = {
-    (0, 0, 0, 0): (MAIN_SCENARIOS, 100), 
-    (1, 0, 0, 0): (LOWCARBON_SCENARIOS, 100),
-    (0, 1, 0, 0): (IMP_SCENARIOS, 100),
-    (0, 0, 1, 0): (NOH2GRID_SCENARIOS, 100),
-    (0, 0, 0, 1): (MAIN_SCENARIOS, 100),
+    (0, 0): (MAIN_SCENARIOS, 100), 
+    (1, 0): (LOWCARBON_SCENARIOS, 100),
+    #(0, 1, 0, 0): (IMP_SCENARIOS, 100),
+    (0, 1): (NOH2GRID_SCENARIOS, 100),
+    #(0, 0, 0, 1): (MAIN_SCENARIOS, 100),
 }
 
-NAMES = ["low_carbon", "imports", "no_h2grid", "no_onwind"]
+NAMES = ["low_carbon", "no_h2grid"]
 tsc = pd.concat(
     {
         k: load_main(scenarios).xs(onw, level="onw", axis=1)
