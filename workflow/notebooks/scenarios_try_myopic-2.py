@@ -67,7 +67,7 @@ def rename_techs_tyndp(tech):
     else:
         return tech
     
-    
+
 preferred_order = pd.Index(
     [
         "transmission lines",
@@ -117,22 +117,6 @@ preferred_order = pd.Index(
         "direct air capture",
     ]
 )
-
-def rename_techs_h2_balances(tech):
-    if tech == "H2 for industry":
-        return "hydrogen for industry"
-    elif tech == "Sabatier":
-        return "methanation"
-    elif tech == "H2 Electrolysis":
-        return "power-to-hydrogen"
-    elif tech == "land transport fuel cell":
-        return "hydrogen for land transport"
-    elif tech == "H2 Fuel Cell":
-        return "hydrogen-to-power/heat"
-    elif "SMR" in tech:
-        return tech.replace("SMR", "steam methane reforming")
-    else:
-        return tech
 
 
 def parse_index(c, with_resolution=False):
