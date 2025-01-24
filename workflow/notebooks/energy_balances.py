@@ -205,7 +205,8 @@ def prepare_energy_balances(networks_dict, country):
     return energy_balance
 
 
-def to_csv(df, run_name, country):
+def to_csv(df, run_name, country): 
+    os.makedirs(f"workflow/results/{run_name}/csvs", exist_ok=True)
     df.to_csv(f"workflow/results/{run_name}/csvs/{country}_energy_balances.csv")
 
 
@@ -295,13 +296,14 @@ def plot_balances(run_name, config, country, energy_threshold):
             frameon=False,
         )
 
+        os.makedirs(f"workflow/results/{run_name}/{country}_balances", exist_ok=True)
         fig.savefig(f"workflow/results/{run_name}/{country}_balances/" + k + ".svg", bbox_inches="tight")
         plt.close(fig)
 
         
-run_name = "myopic-default-2025-2050-5-T-H-B-I-A"
-config = "config.myopic_main.yaml" 
-country = "DE" # EU means all European countries
+run_name = "myopic-noh2grid-2025-2050-5-T-H-B-I-A"
+config = "config.myopic_noh2grid.yaml" 
+countries = ["DE", "EU"] # EU means all European countries
 energy_threshold = 5 # in TWh; different between DE and EU
 
 with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as file:
@@ -317,8 +319,9 @@ networks_dict = {
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 
-energy_balance = prepare_energy_balances(networks_dict, country)
+for country in countries:
+    energy_balance = prepare_energy_balances(networks_dict, country)
 
-to_csv(energy_balance, run_name, country)
+    to_csv(energy_balance, run_name, country)
 
-plot_balances(run_name, config, country, energy_threshold)
+    plot_balances(run_name, config, country, energy_threshold)

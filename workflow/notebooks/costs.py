@@ -166,6 +166,7 @@ def prepare_costs(networks_dict, country):
 
 
 def to_csv(df, run_name, country):
+    os.makedirs(f"workflow/results/{run_name}/csvs", exist_ok=True)
     df.to_csv(f"workflow/results/{run_name}/csvs/{country}_costs.csv")
 
 
@@ -225,13 +226,14 @@ def plot_costs(run_name, config, country, cost_threshold):
         handles, labels, ncol=1, loc="upper left", bbox_to_anchor=[1, 1], frameon=False
     )
 
+    os.makedirs(f"workflow/results/{run_name}/{country}_balances", exist_ok=True)
     fig.savefig(f"workflow/results/{run_name}/{country}_balances/{country}_costs2.svg", bbox_inches="tight")
     plt.close(fig)
 
         
-run_name = "myopic-default-2025-2050-5-T-H-B-I-A"
-config = "config.myopic_main.yaml" 
-country = "DE" # EU means all European countries
+run_name = "myopic-noh2grid-2025-2050-5-T-H-B-I-A"
+config = "config.myopic_noh2grid.yaml" 
+countries = ["DE", "EU"] # EU means all European countries
 cost_threshold = 1 # in TWh; different between DE and EU
 
 with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as file:
@@ -247,8 +249,9 @@ networks_dict = {
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 
-costs = prepare_costs(networks_dict, country)
+for country in countries:
+    costs = prepare_costs(networks_dict, country)
 
-to_csv(costs, run_name, country)
+    to_csv(costs, run_name, country)
 
-plot_costs(run_name, config, country, cost_threshold)
+    plot_costs(run_name, config, country, cost_threshold)
