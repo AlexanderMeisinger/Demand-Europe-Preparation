@@ -1,1 +1,2 @@
-# analyse-h2g-a-ap3-eu
+# H2Global meets Africa: Energy demand modelling in Germany and the EU"
+Analyse the results from PyPSA-Eur in Germany and the EU
