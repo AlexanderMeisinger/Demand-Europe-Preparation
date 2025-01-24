@@ -174,19 +174,45 @@ nice_names = {
         "agriculture electricity": "Agriculture Electricity"
     }
 
-def plot_balances(country, run_name, config, n_header):
+
+def prepare_energy_balances(networks_dict):
+    columns = pd.MultiIndex.from_tuples(
+        networks_dict.keys(),
+        names=["cluster", "ll", "opt", "planning_horizon"],
+    )
+
+    energy_balance = pd.DataFrame(columns=columns, dtype=float)
+
+    for label, filename in networks_dict.items():
+
+        n = pypsa.Network(filename)
+
+        df_annual = n.statistics.energy_balance()
+        df_annual = df_annual.reorder_levels(['bus_carrier', 'component', 'carrier'])
+        df_annual = df_annual.sort_index()
+
+        energy_balance = energy_balance.reindex(df_annual.index.union(energy_balance.index))
+        energy_balance.loc[df_annual.index, label] = df_annual
+
+    energy_balance = energy_balance.fillna(0)
+
+    return energy_balance
+
+
+def to_csv(df, run_name):
+    df.to_csv(f"workflow/results/{run_name}/csvs/EU_energy_balances.csv")
+
+
+def plot_balances(run_name, config):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
     balances_df = pd.read_csv(
-        f"../pypsa-eur/results/myopic/{run_name}/csvs/nodal_supply_energy.csv", index_col=list(range(4)), header=list(range(n_header))
+        f"workflow/results/{run_name}/csvs/EU_energy_balances.csv", index_col=list(range(3)), header=list(range(4))
     )
-    balances_df = balances_df[balances_df.index.get_level_values(2).str.contains(country, case=True)]
-    balances_df.index = balances_df.index.droplevel(2)
-    
 
-    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.get_level_values(0).unique()}
+    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.levels[0]}
     balances["energy"] = [
-        i for i in balances_df.index.get_level_values(0).unique() if i not in co2_carriers
+        i for i in balances_df.index.levels[0] if i not in co2_carriers
     ]
 
     for k, v in balances.items():
@@ -234,7 +260,7 @@ def plot_balances(country, run_name, config, n_header):
             kind="bar",
             ax=ax,
             stacked=True,
-            #color=[config["plotting"]["tech_colors"][i] for i in new_index],
+            color=[config["plotting"]["tech_colors"][i] for i in new_index],
         )
         
         handles, labels = ax.get_legend_handles_labels() 
@@ -263,16 +289,33 @@ def plot_balances(country, run_name, config, n_header):
             frameon=False,
         )
 
-        fig.savefig(f"workflow/results/{run_name}/balances/" + k + ".svg", bbox_inches="tight")
+        fig.savefig(f"workflow/results/{run_name}/balances/DE_" + k + ".svg", bbox_inches="tight")
         plt.close(fig)
 
+        
 run_name = "myopic-default-2025-2050-5-T-H-B-I-A"
 config = "config.myopic_main.yaml" 
-country = "DE"
-
 
 with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as file:
     config = yaml.safe_load(file)
 
+networks_dict = {
+        (cluster, ll, opt + sector_opt, planning_horizon): f"/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/{run_name}"
+        + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
+        for cluster in config["scenario"]["clusters"]
+        for opt in config["scenario"]["opts"]
+        for sector_opt in config["scenario"]["sector_opts"]
+        for ll in config["scenario"]["ll"]
+        for planning_horizon in config["scenario"]["planning_horizons"]
+    }
 
-plot_balances(country, run_name, config, n_header=4)
+energy_balance = prepare_energy_balances(networks_dict)
+
+to_csv(energy_balance, run_name)
+
+plot_balances(run_name, config)
+
+
+
+# Nächste Schritte: 
+# - Color setting

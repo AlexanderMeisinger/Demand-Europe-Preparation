@@ -209,7 +209,7 @@ def to_csv(df, run_name, country):
     df.to_csv(f"workflow/results/{run_name}/csvs/{country}_energy_balances.csv")
 
 
-def plot_balances(run_name, config, country):
+def plot_balances(run_name, config, country, energy_threshold):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
     balances_df = pd.read_csv(
@@ -295,7 +295,7 @@ def plot_balances(run_name, config, country):
             frameon=False,
         )
 
-        fig.savefig(f"workflow/results/{run_name}/{country}_balances/" + k + "2.svg", bbox_inches="tight")
+        fig.savefig(f"workflow/results/{run_name}/{country}_balances/" + k + ".svg", bbox_inches="tight")
         plt.close(fig)
 
         

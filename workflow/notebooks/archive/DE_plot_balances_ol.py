@@ -15,11 +15,11 @@ import xarray as xr
 import cartopy
 import sys
 
-PATH = "../../../pypsa-eur/"
+PATH = "../pypsa-eur/"
 sys.path.append(os.path.join(PATH, "scripts/"))
 from _helpers import rename_techs
 
-plt.style.use(["bmh", "matplotlibrc"])
+#plt.style.use(["bmh", "matplotlibrc"])
 xr.set_options(display_style="html")
 
 tech_names = {
@@ -174,16 +174,20 @@ nice_names = {
         "agriculture electricity": "Agriculture Electricity"
     }
 
-def plot_balances(run_name, config, n_header):
+def plot_balances(country, run_name, config, n_header):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
     balances_df = pd.read_csv(
-        f"../../../pypsa-eur/results/myopic/{run_name}/csvs/supply_energy.csv", index_col=list(range(3)), header=list(range(n_header))
+        f"../pypsa-eur/results/myopic/{run_name}/csvs/nodal_supply_energy.csv", index_col=list(range(4)), header=list(range(n_header))
     )
 
-    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.levels[0]}
+    balances_df = balances_df[balances_df.index.get_level_values(2).str.contains(country, case=True)]
+    balances_df.index = balances_df.index.droplevel(2)
+    
+
+    balances = {i.replace(" ", "_"): [i] for i in balances_df.index.get_level_values(0).unique()}
     balances["energy"] = [
-        i for i in balances_df.index.levels[0] if i not in co2_carriers
+        i for i in balances_df.index.get_level_values(0).unique() if i not in co2_carriers
     ]
 
     for k, v in balances.items():
@@ -231,7 +235,7 @@ def plot_balances(run_name, config, n_header):
             kind="bar",
             ax=ax,
             stacked=True,
-            color=[config["plotting"]["tech_colors"][i] for i in new_index],
+            #color=[config["plotting"]["tech_colors"][i] for i in new_index],
         )
         
         handles, labels = ax.get_legend_handles_labels() 
@@ -260,15 +264,16 @@ def plot_balances(run_name, config, n_header):
             frameon=False,
         )
 
-        fig.savefig(f"../results/{run_name}/balances/" + k + ".svg", bbox_inches="tight")
+        fig.savefig(f"workflow/results/{run_name}/balances/" + k + ".svg", bbox_inches="tight")
         plt.close(fig)
 
-run_name = "myopic-default-2025-2050-5-T-H-B-I-A-co2-budget"
-config = "config.pathways-myopics_default_cb_red.yaml" 
+run_name = "myopic-default-2025-2050-5-T-H-B-I-A"
+config = "config.myopic_main.yaml" 
+country = "DE"
 
 
 with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as file:
     config = yaml.safe_load(file)
 
 
-plot_balances(run_name, config, n_header=4)
+plot_balances(country, run_name, config, n_header=4)
