@@ -301,7 +301,7 @@ def plot_balances(run_name, config, country, energy_threshold):
         
 run_name = "myopic-default-2025-2050-5-T-H-B-I-A"
 config = "config.myopic_main.yaml" 
-country = "EU" # EU means all European countries
+country = "DE" # EU means all European countries
 energy_threshold = 5 # in TWh; different between DE and EU
 
 with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as file:
@@ -321,4 +321,4 @@ energy_balance = prepare_energy_balances(networks_dict, country)
 
 to_csv(energy_balance, run_name, country)
 
-plot_balances(run_name, config, country)
+plot_balances(run_name, config, country, energy_threshold)
