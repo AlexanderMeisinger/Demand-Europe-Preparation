@@ -227,7 +227,7 @@ def plot_costs(run_name, config, country, cost_threshold):
     )
 
     os.makedirs(f"workflow/results/{run_name}/{country}_balances", exist_ok=True)
-    fig.savefig(f"workflow/results/{run_name}/{country}_balances/{country}_costs2.svg", bbox_inches="tight")
+    fig.savefig(f"workflow/results/{run_name}/{country}_balances/{country}_costs.svg", bbox_inches="tight")
     plt.close(fig)
 
         
