@@ -11,35 +11,19 @@ import numpy as np
 import xarray as xr
 import pypsa
 
-# Set the main path for script imports and configuration
-PATH = "/mnt/e/H2GMA/Github/Europe/pypsa-eur"
-sys.path.append(os.path.join(PATH, "scripts/"))
-from _helpers import rename_techs
-
 # Configure global settings
 xr.set_options(display_style="html")
 
 
-# Helper function to parse scenario index
-# Add information about cluster level, grid- and wind expansion, time horizon as headline of final dataset
-def parse_index(c):
-    clusters = c[0] 
-    lv = c[1]
-    match = re.search(r"onwind\+p([0-9.]*)", c[2])
-    onw = 100.0 if match is None else 100 * float(match.groups()[0])
-    year = c[3]
-    to_return = (clusters, lv, onw, year)
-
-    return to_return
-
-
 # Process capacity data
-def capacity(scenarios, country, onw=100):
+def capacity(scenarios, country):
+    # Read config settings for scenario
     files = sorted([f for f in os.listdir(f"{scenarios}/configs") if os.path.isfile(os.path.join(f"{scenarios}/configs", f))])
     if files:
         with open(os.path.join(f"{scenarios}/configs", files[0]), 'r') as file:
             config = yaml.safe_load(file)
 
+    # Get results from scenario (nc file)
     networks_dict = {
         (cluster, ll, opt + sector_opt, planning_horizon): f"{scenarios}"
         + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
@@ -49,18 +33,19 @@ def capacity(scenarios, country, onw=100):
         for ll in config["scenario"]["ll"]
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
-    
+
+    # Set sceanrio settings in dataset
     columns = pd.MultiIndex.from_tuples(
         networks_dict.keys(),
-        names=["cluster", "ll", "opt", "planning_horizon"],
+        names=["clusters", "ll", "opt", "planning_horizon"],
     )
-
     cap = pd.DataFrame(columns=columns, dtype=float)
 
+    # Set results in dataset
     for label, filename in networks_dict.items():
-
+        # Read nc file
         n = pypsa.Network(filename)
-    
+        # Extract and sort results from nc file
         if country == "EU":
             df_cap_annual = pd.concat([n.statistics.optimal_capacity()])
         else:
@@ -73,37 +58,29 @@ def capacity(scenarios, country, onw=100):
 
         cap = cap.reindex(df_cap_annual.index.union(cap.index))
         cap.loc[df_cap_annual.index, label] = df_cap_annual
-
+    # Fill nan values
     df = cap.fillna(0)
-
-    #df = df.groupby(df.index.map(rename_techs)).sum()
-    
-    df.columns = pd.MultiIndex.from_tuples(
-                [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "year"]
-            )
-
-    df = df.xs((onw, config["scenario"]["clusters"]), level=["onw", "clusters"], axis=1)
-    
+    # Drop non relevant scenario informations
+    df = df.xs((config["scenario"]["clusters"][0], config["scenario"]["ll"][0], config["scenario"]["sector_opts"][0]), level=["clusters", "ll", "opt"], axis=1)
+    # Sort results
     twh = df.drop(["Generator", "Link", "Line", "StorageUnit"]).div(1e6)  # TWh
-
-    gw = df.drop(["Store", "Line"]).div(1e3)  # GW
-
     twh = twh.groupby(level=1).sum()
-
+    gw = df.drop(["Store", "Line"]).div(1e3)  # GW
     gen = gw.loc[["Generator", "StorageUnit"]].groupby(level=1).sum()
-
     con = gw.loc[["Link"]].groupby(level=1).sum()
 
     return gen, con, twh
 
 
 # Process energy balances
-def energy_balances(scenarios, sector, country, onw=100):
+def energy_balances(scenarios, sector, country):
+    # Read config settings for scenario
     files = sorted([f for f in os.listdir(f"{scenarios}/configs") if os.path.isfile(os.path.join(f"{scenarios}/configs", f))])
     if files:
         with open(os.path.join(f"{scenarios}/configs", files[0]), 'r') as file:
             config = yaml.safe_load(file)
 
+    # Get results from scenario (nc file)
     networks_dict = {
         (cluster, ll, opt + sector_opt, planning_horizon): f"{scenarios}"
         + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
@@ -114,17 +91,18 @@ def energy_balances(scenarios, sector, country, onw=100):
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 
+    # Set sceanrio settings in dataset
     columns = pd.MultiIndex.from_tuples(
         networks_dict.keys(),
         names=["cluster", "ll", "opt", "planning_horizon"],
     )
-
     energy_balance = pd.DataFrame(columns=columns, dtype=float)
 
+    # Set results in dataset
     for label, filename in networks_dict.items():
-
+        # Read nc file
         n = pypsa.Network(filename)
-
+        # Extract and sort results from nc file
         if country == "EU":
             df_annual = n.statistics.energy_balance()
         else:
@@ -137,25 +115,25 @@ def energy_balances(scenarios, sector, country, onw=100):
 
         energy_balance = energy_balance.reindex(df_annual.index.union(energy_balance.index))
         energy_balance.loc[df_annual.index, label] = df_annual
-
+    # Fill nan values
     energy_balance = energy_balance.fillna(0)
     
-    co2_carriers = ["co2", "co2 stored", "process emissions"]
-
+    # Get sectors
     balances = {i.replace(" ", "_"): [i] for i in energy_balance.index.levels[0]}
+    # Define sector energy
+    co2_carriers = ["co2", "co2 stored", "process emissions"]
     balances["energy"] = [
         i for i in energy_balance.index.levels[0] if i not in co2_carriers
     ]
 
     for k, v in balances.items():
         if k == sector:
+            # Filter results
             df = energy_balance.loc[energy_balance.index.get_level_values(0).isin(v)]
             df = df.groupby(df.index.get_level_values(2)).sum()
-
-            # convert MWh to TWh
+            # Convert MWh to TWh
             df = df / 1e6
-
-            # remove trailing link ports
+            # Remove trailing link ports
             df.index = [
                 (
                     i[:-1]
@@ -167,25 +145,21 @@ def energy_balances(scenarios, sector, country, onw=100):
                 )
                 for i in df.index
             ]
-
-            df = df.groupby(df.index.map(rename_techs)).sum()
-
-            df.columns = pd.MultiIndex.from_tuples(
-                [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "year"]
-            )
-
-            df = df.xs((onw, config["scenario"]["clusters"]), level=["onw", "clusters"], axis=1)
+            # Drop non relevant scenario informations
+            df = df.xs((config["scenario"]["clusters"][0], config["scenario"]["ll"][0], config["scenario"]["sector_opts"][0]), level=["cluster", "ll", "opt"], axis=1)
 
     return df 
 
 
-# PProcess total costs
-def costs(scenarios, country, onw=100):
+# Process total costs
+def costs(scenarios, country):
+    # Read config settings for scenario
     files = sorted([f for f in os.listdir(f"{scenarios}/configs") if os.path.isfile(os.path.join(f"{scenarios}/configs", f))])
     if files:
         with open(os.path.join(f"{scenarios}/configs", files[0]), 'r') as file:
             config = yaml.safe_load(file)
 
+    # Get results from scenario (nc file)
     networks_dict = {
         (cluster, ll, opt + sector_opt, planning_horizon): f"{scenarios}"
         + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
@@ -196,17 +170,18 @@ def costs(scenarios, country, onw=100):
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
     
+    # Set sceanrio settings in dataset
     columns = pd.MultiIndex.from_tuples(
         networks_dict.keys(),
         names=["cluster", "ll", "opt", "planning_horizon"],
     )
-
     cost = pd.DataFrame(columns=columns, dtype=float)
 
+    # Set results in dataset
     for label, filename in networks_dict.items():
-
+        # Read nc file
         n = pypsa.Network(filename)
-
+        # Extract and sort results from nc file
         if country == "EU":
             df_capital_annual = pd.concat([n.statistics.capex()], keys=["capital"])
         else:
@@ -230,24 +205,17 @@ def costs(scenarios, country, onw=100):
 
         cost = cost.reindex(df_marginal_costs_annual.index.union(cost.index))
         cost.loc[df_marginal_costs_annual.index, label] = df_marginal_costs_annual
-
+    # Fill nan values
     cost = cost.fillna(0)
-
+    # Filter results
     if country == "EU":
         df = cost.groupby(cost.index.get_level_values(2)).sum()
     else:
         df = cost.groupby(cost.index.get_level_values(3)).sum()
-
-    # convert to billions
+    # Convert to billions
     df = df / 1e9
-
-    df = df.groupby(df.index.map(rename_techs)).sum()
-
-    df.columns = pd.MultiIndex.from_tuples(
-                [parse_index(c) for c in df.columns], names=["clusters", "lv", "onw", "year"]
-            )
-
-    df = df.xs((onw, config["scenario"]["clusters"]), level=["onw", "clusters"], axis=1)
+    # Drop non relevant scenario informations
+    df = df.xs((config["scenario"]["clusters"][0], config["scenario"]["ll"][0], config["scenario"]["sector_opts"][0]), level=["cluster", "ll", "opt"], axis=1)
     
     return df
 
@@ -260,9 +228,9 @@ NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic
 
 # Config settings for scenario
 SCENARIOS = {
-    (0, 0): (MAIN_SCENARIOS, 100), 
-    (1, 0): (LOWCARBON_SCENARIOS, 100),
-    (0, 1): (NOH2GRID_SCENARIOS, 100),
+    (0, 0): (MAIN_SCENARIOS), 
+    (1, 0): (LOWCARBON_SCENARIOS),
+    (0, 1): (NOH2GRID_SCENARIOS),
 }
 NAMES = ["low_carbon", "no_h2grid"]
 countries = ["DE", "EU"] # EU means all European countries
@@ -270,58 +238,54 @@ countries = ["DE", "EU"] # EU means all European countries
 for country in countries:
     # Cost preparation
     cost = pd.concat(
-        {k: costs(scenarios, country, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+        {k: costs(scenarios, country) for k, (scenarios) in SCENARIOS.items()},
         names=NAMES,
     )
     cost.index.names = cost.index.names[:-1] + ["carrier"]
-    cost = cost.stack([0, 1]).to_xarray()
+    cost = cost.stack([0]).to_xarray()
     cost.name = "costs"
 
     # Energy balance preparation
     energy = pd.concat(
-        {k: energy_balances(scenarios, "energy", country, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+        {k: energy_balances(scenarios, "energy", country) for k, (scenarios) in SCENARIOS.items()},
         names=NAMES,
     )
-
     energy.index.names = energy.index.names[:-1] + ["carrier"]
-    energy = energy.stack([0, 1]).to_xarray()
+    energy = energy.stack([0]).to_xarray()
     energy.name = "energy"
 
     # CO2 balance preparation
     if country == "EU":
         co2 = pd.concat(
-            {k: energy_balances(scenarios, "co2", country, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+            {k: energy_balances(scenarios, "co2", country) for k, (scenarios) in SCENARIOS.items()},
             names=NAMES,
         )
-
         co2.index.names = co2.index.names[:-1] + ["carrier"]
-        co2 = co2.stack([0, 1]).to_xarray()
+        co2 = co2.stack([0]).to_xarray()
         co2.name = "co2"
 
     # H2 balance preparation
     h2 = pd.concat(
-        {k: energy_balances(scenarios, "Hydrogen_Storage", country, onw) for k, (scenarios, onw) in SCENARIOS.items()},
+        {k: energy_balances(scenarios, "Hydrogen_Storage", country) for k, (scenarios) in SCENARIOS.items()},
         names=NAMES,
     )
-
     h2.index.names = h2.index.names[:-1] + ["carrier"]
-    h2 = h2.stack([0, 1]).to_xarray()
+    h2 = h2.stack([0]).to_xarray()
     h2.name = "hydrogen"
-
+    
     # Generation, storage and conversion capacity preparation
     cap = pd.concat(
         {
             k: pd.concat(
-                capacity(scenarios, country, onw),
+                capacity(scenarios, country),
                 keys=["generation", "conversion", "storage"],
             )
-            for k, (scenarios, onw) in SCENARIOS.items()
+            for k, (scenarios) in SCENARIOS.items()
         },
         names=NAMES,
     )
-
     cap.index.names = cap.index.names[:-2] + ["category", "carrier"]
-    cap = cap.stack([0, 1]).unstack("category").to_xarray()
+    cap = cap.stack([0]).unstack("category").to_xarray()
     
     # Merge and output all data
     if country == "EU":
