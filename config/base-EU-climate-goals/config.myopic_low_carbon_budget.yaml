@@ -21,7 +21,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: "myopic"
-  name: "myopic-noH2network-2025-2050-5-T-H-B-I-A"
+  name: "myopicc-eu-climate-goals-low_carbon_budget-2025-2050-5-T-H-B-I-A"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -44,7 +44,7 @@ scenario:
   opts:
   - ''
   sector_opts:
-  - '144H-T-H-B-I-A-cb73.9ex0-noH2network'
+  - '144H-T-H-B-I-A-cb25.7ex0'
 
   planning_horizons:
   #- 2020
