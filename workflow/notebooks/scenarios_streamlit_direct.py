@@ -26,11 +26,11 @@ def capacity(scenarios, country):
     # Get results from scenario (nc file)
     networks_dict = {
         (cluster, ll, opt + sector_opt, planning_horizon): f"{scenarios}"
-        + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
+        + f"/networks/base_s_{cluster}_{opt}_{sector_opt}_{planning_horizon}.nc"
         for cluster in config["scenario"]["clusters"]
         for opt in config["scenario"]["opts"]
         for sector_opt in config["scenario"]["sector_opts"]
-        for ll in config["scenario"]["ll"]
+        for ll in [config["electricity"]["transmission_limit"]]
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 
@@ -40,7 +40,7 @@ def capacity(scenarios, country):
         names=["clusters", "ll", "opt", "planning_horizon"],
     )
     cap = pd.DataFrame(columns=columns, dtype=float)
-
+    print(f"Capacity analysis for {country} and scenario {scenarios}")
     # Set results in dataset
     for label, filename in networks_dict.items():
         # Read nc file
@@ -61,11 +61,15 @@ def capacity(scenarios, country):
     # Fill nan values
     df = cap.fillna(0)
     # Drop non relevant scenario informations
-    df = df.xs((config["scenario"]["clusters"][0], config["scenario"]["ll"][0], config["scenario"]["sector_opts"][0]), level=["clusters", "ll", "opt"], axis=1)
+    df = df.xs((config["scenario"]["clusters"][0], config["electricity"]["transmission_limit"], config["scenario"]["sector_opts"][0]), level=["clusters", "ll", "opt"], axis=1)
     # Sort results
-    twh = df.drop(["Generator", "Link", "Line", "StorageUnit"]).div(1e6)  # TWh
+    twh_columns_to_drop = ["Generator", "Link", "Line", "StorageUnit"]
+    twh_existing_columns = [col for col in twh_columns_to_drop if col in df.columns]
+    twh = df.drop(twh_existing_columns).div(1e6)  # TWh
     twh = twh.groupby(level=1).sum()
-    gw = df.drop(["Store", "Line"]).div(1e3)  # GW
+    gw_columns_to_drop = ["Store", "Line"]
+    gw_existing_columns = [col for col in gw_columns_to_drop if col in df.columns]
+    gw = df.drop(gw_existing_columns).div(1e3)  # GW
     gen = gw.loc[["Generator", "StorageUnit"]].groupby(level=1).sum()
     con = gw.loc[["Link"]].groupby(level=1).sum()
 
@@ -83,11 +87,11 @@ def energy_balances(scenarios, sector, country):
     # Get results from scenario (nc file)
     networks_dict = {
         (cluster, ll, opt + sector_opt, planning_horizon): f"{scenarios}"
-        + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
+        + f"/networks/base_s_{cluster}_{opt}_{sector_opt}_{planning_horizon}.nc"
         for cluster in config["scenario"]["clusters"]
         for opt in config["scenario"]["opts"]
         for sector_opt in config["scenario"]["sector_opts"]
-        for ll in config["scenario"]["ll"]
+        for ll in [config["electricity"]["transmission_limit"]]
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 
@@ -97,7 +101,7 @@ def energy_balances(scenarios, sector, country):
         names=["cluster", "ll", "opt", "planning_horizon"],
     )
     energy_balance = pd.DataFrame(columns=columns, dtype=float)
-
+    print(f"{sector} analysis for {country} and scenario {scenarios}")
     # Set results in dataset
     for label, filename in networks_dict.items():
         # Read nc file
@@ -146,7 +150,7 @@ def energy_balances(scenarios, sector, country):
                 for i in df.index
             ]
             # Drop non relevant scenario informations
-            df = df.xs((config["scenario"]["clusters"][0], config["scenario"]["ll"][0], config["scenario"]["sector_opts"][0]), level=["cluster", "ll", "opt"], axis=1)
+            df = df.xs((config["scenario"]["clusters"][0], config["electricity"]["transmission_limit"], config["scenario"]["sector_opts"][0]), level=["cluster", "ll", "opt"], axis=1)
 
     return df 
 
@@ -162,11 +166,11 @@ def costs(scenarios, country):
     # Get results from scenario (nc file)
     networks_dict = {
         (cluster, ll, opt + sector_opt, planning_horizon): f"{scenarios}"
-        + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
+        + f"/networks/base_s_{cluster}_{opt}_{sector_opt}_{planning_horizon}.nc"
         for cluster in config["scenario"]["clusters"]
         for opt in config["scenario"]["opts"]
         for sector_opt in config["scenario"]["sector_opts"]
-        for ll in config["scenario"]["ll"]
+        for ll in [config["electricity"]["transmission_limit"]]
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
     
@@ -178,6 +182,7 @@ def costs(scenarios, country):
     cost = pd.DataFrame(columns=columns, dtype=float)
 
     # Set results in dataset
+    print(f"Cost analysis for {country} and scenario {scenarios}")
     for label, filename in networks_dict.items():
         # Read nc file
         n = pypsa.Network(filename)
@@ -215,24 +220,32 @@ def costs(scenarios, country):
     # Convert to billions
     df = df / 1e9
     # Drop non relevant scenario informations
-    df = df.xs((config["scenario"]["clusters"][0], config["scenario"]["ll"][0], config["scenario"]["sector_opts"][0]), level=["cluster", "ll", "opt"], axis=1)
+    df = df.xs((config["scenario"]["clusters"][0], config["electricity"]["transmission_limit"], config["scenario"]["sector_opts"][0]), level=["cluster", "ll", "opt"], axis=1)
     
     return df
 
 
 # Settings
 # Set path for scenarios
-MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-2025-2050-5-T-H-B-I-A"
-LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-low_carbon_budget-2025-2050-5-T-H-B-I-A"
-NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-noh2grid-2025-2050-5-T-H-B-I-A"
+MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
+LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
+NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
+AMMONIA_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
+DECENTRAL_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
+##LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-low_carbon_budget-2025-2050-5-T-H-B-I-A"
+#NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-noH2network-2025-2050-5-T-H-B-I-A"
+#AMMONIA_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-ammonia-2025-2050-5-T-H-B-I-A"
+#DECENTRAL_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-decentral-2025-2050-5-T-H-B-I-A"
 
 # Config settings for scenario
 SCENARIOS = {
-    (0, 0): (MAIN_SCENARIOS), 
-    (1, 0): (LOWCARBON_SCENARIOS),
-    (0, 1): (NOH2GRID_SCENARIOS),
+    (0, 0, 0, 0): (MAIN_SCENARIOS), 
+    (1, 0, 0, 0): (LOWCARBON_SCENARIOS),
+    (0, 1, 0, 0): (NOH2GRID_SCENARIOS),
+    (0, 0, 1, 0): (AMMONIA_SCENARIOS),
+    (0, 0, 0, 1): (DECENTRAL_SCENARIOS)
 }
-NAMES = ["low_carbon", "no_h2grid"]
+NAMES = ["low_carbon", "no_h2grid", "ammonia", "decentral"]
 countries = ["DE", "EU"] # EU means all European countries
 
 for country in countries:
