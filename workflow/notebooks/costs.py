@@ -241,11 +241,11 @@ with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as
 
 networks_dict = {
         (cluster, ll, opt + sector_opt, planning_horizon): f"/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/{run_name}"
-        + f"/postnetworks/base_s_{cluster}_l{ll}_{opt}_{sector_opt}_{planning_horizon}.nc"
+        + f"/postnetworks/base_s_{cluster}_{opt}_{sector_opt}_{planning_horizon}.nc"
         for cluster in config["scenario"]["clusters"]
         for opt in config["scenario"]["opts"]
         for sector_opt in config["scenario"]["sector_opts"]
-        for ll in config["scenario"]["ll"]
+        for ll in config["electricity"]["transmission_limit"]
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 
