@@ -227,15 +227,11 @@ def costs(scenarios, country):
 
 # Settings
 # Set path for scenarios
-MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
-LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
-NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
-AMMONIA_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
-DECENTRAL_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-default-20250202-2025-2050-5-T-H-B-I-A"
-##LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-low_carbon_budget-2025-2050-5-T-H-B-I-A"
-#NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-noH2network-2025-2050-5-T-H-B-I-A"
-#AMMONIA_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-ammonia-2025-2050-5-T-H-B-I-A"
-#DECENTRAL_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-decentral-2025-2050-5-T-H-B-I-A"
+MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-default-2025-2050-5-T-H-B-I-A"
+LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-low_carbon_budget-2025-2050-5-T-H-B-I-A"
+NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-noH2network-2025-2050-5-T-H-B-I-A"
+AMMONIA_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-ammonia-2025-2050-5-T-H-B-I-A"
+DECENTRAL_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-decentral-2025-2050-5-T-H-B-I-A"
 
 # Config settings for scenario
 SCENARIOS = {
