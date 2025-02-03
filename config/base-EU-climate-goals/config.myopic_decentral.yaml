@@ -21,7 +21,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: "myopic"
-  name: "myopicc-eu-climate-goals-decentral-2025-2050-5-T-H-B-I-A"
+  name: "myopic-eu-climate-goals-decentral-2025-2050-5-T-H-B-I-A"
   scenarios:
     enable: false
     file: config/scenarios.yaml
