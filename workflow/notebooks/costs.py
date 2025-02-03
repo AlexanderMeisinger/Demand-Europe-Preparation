@@ -245,7 +245,7 @@ networks_dict = {
         for cluster in config["scenario"]["clusters"]
         for opt in config["scenario"]["opts"]
         for sector_opt in config["scenario"]["sector_opts"]
-        for ll in config["electricity"]["transmission_limit"]
+        for ll in [config["electricity"]["transmission_limit"]]
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 

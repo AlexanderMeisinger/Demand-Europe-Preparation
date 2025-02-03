@@ -189,12 +189,19 @@ def prepare_energy_balances(networks_dict, country):
 
         if country == "EU":
             df_annual = n.statistics.energy_balance()
+        elif country == "":
+            df_annual = n.statistics.energy_balance(groupby=["carrier", "bus_carrier", "country"])
+            idx = pd.IndexSlice
+            df_annual = df_annual.loc[idx[:,:,:,:]]
         else:
             df_annual = n.statistics.energy_balance(groupby=["carrier", "bus_carrier", "country"])
             idx = pd.IndexSlice
             df_annual = df_annual.loc[idx[:,:,:,country]]
 
-        df_annual = df_annual.reorder_levels(['bus_carrier', 'component', 'carrier'])
+        if country == "":
+            df_annual = df_annual.reorder_levels(['bus_carrier', 'component', 'carrier', "country"])
+        else:
+            df_annual = df_annual.reorder_levels(['bus_carrier', 'component', 'carrier'])
         df_annual = df_annual.sort_index()
 
         energy_balance = energy_balance.reindex(df_annual.index.union(energy_balance.index))
@@ -213,9 +220,14 @@ def to_csv(df, run_name, country):
 def plot_balances(run_name, config, country, energy_threshold):
     co2_carriers = ["co2", "co2 stored", "process emissions"]
 
-    balances_df = pd.read_csv(
-        f"workflow/results/{run_name}/csvs/{country}_energy_balances.csv", index_col=list(range(3)), header=list(range(4))
-    )
+    if country == "":
+        balances_df = pd.read_csv(
+            f"workflow/results/{run_name}/csvs/{country}_energy_balances.csv", index_col=list(range(3)), header=list(range(5))
+        )
+    else:
+        balances_df = pd.read_csv(
+            f"workflow/results/{run_name}/csvs/{country}_energy_balances.csv", index_col=list(range(3)), header=list(range(4))
+        )
 
     balances = {i.replace(" ", "_"): [i] for i in balances_df.index.levels[0]}
     balances["energy"] = [
@@ -301,21 +313,22 @@ def plot_balances(run_name, config, country, energy_threshold):
         plt.close(fig)
 
         
-run_name = "myopic-noh2grid-2025-2050-5-T-H-B-I-A"
-config = "config.myopic_noh2grid.yaml" 
-countries = ["DE", "EU"] # EU means all European countries
+run_name = "EU-Climate-Goals-Main"
+run_name_pypsa = "myopic-default-20250202-2025-2050-5-T-H-B-I-A"
+config = "config.myopic_play.yaml" 
+countries = ["DE", "EU", ""] # EU means all European countries
 energy_threshold = 5 # in TWh; different between DE and EU
 
 with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as file:
     config = yaml.safe_load(file)
 
 networks_dict = {
-        (cluster, ll, opt + sector_opt, planning_horizon): f"/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/{run_name}"
+        (cluster, ll, opt + sector_opt, planning_horizon): f"/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/{run_name_pypsa}"
         + f"/networks/base_s_{cluster}_{opt}_{sector_opt}_{planning_horizon}.nc"
         for cluster in config["scenario"]["clusters"]
         for opt in config["scenario"]["opts"]
         for sector_opt in config["scenario"]["sector_opts"]
-        for ll in config["electricity"]["transmission_limit"]
+        for ll in [config["electricity"]["transmission_limit"]]
         for planning_horizon in config["scenario"]["planning_horizons"]
     }
 
@@ -323,5 +336,5 @@ for country in countries:
     energy_balance = prepare_energy_balances(networks_dict, country)
 
     to_csv(energy_balance, run_name, country)
-
-    plot_balances(run_name, config, country, energy_threshold)
+    if country != "":
+        plot_balances(run_name, config, country, energy_threshold)
