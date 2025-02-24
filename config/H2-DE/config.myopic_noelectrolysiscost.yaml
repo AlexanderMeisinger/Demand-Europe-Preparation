@@ -873,7 +873,7 @@ costs:
   # Marginal and capital costs can be overwritten
   capital_cost:
   #   onwind: 500
-    electrolysis: 1000
+    electrolysis: 0
     fuel cell: 845
   marginal_cost:
     solar: 0.01
