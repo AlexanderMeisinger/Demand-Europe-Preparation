@@ -38,21 +38,37 @@ foresight: myopic
 # Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
 scenario:
   clusters:
-  - 1
-  #- 128
+  #- 1
+  - 16
   #- 256
   opts:
   - ''
   sector_opts:
-  - '144H-T-H-B-I-A'
+  - '144H'
+  #- '144H-ammonia'
+  #- '144H-lowcarbonbudget'
+  #- '144H-hightransportfuelcellshare'
+  #- '144H-noH2SMR'
+  #- '144H-nodistrict'
+  #- '144H-electrolysisnocost'
+  #- '144H-electrolysishighcost'
+  #- '144H-fuelcellnocost'
+  #- '144H-decentral'
+  #- '144H-noH2network'
+  #- '144H-nodistrict'
+  #- '144H-noco2sequestration'
+  #- '144H-nofossilimport'
+  #- '144H-hydrogenturbine'
+  #- '144H-highh2industry'
+  #- '144H-highco2price'
 
   planning_horizons:
   #- 2020
   #- 2025
   - 2030
   #- 2035
-  - 2040
-  - 2045
+  #- 2040
+  #- 2045
   - 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
@@ -67,8 +83,8 @@ snapshots:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
   retrieve: auto
-  retrieve_databundle: false
-  retrieve_cost_data: false
+  retrieve_databundle: true
+  retrieve_cost_data: true
   build_cutout: false
   retrieve_cutout: true
   custom_busmap: false
@@ -78,11 +94,11 @@ enable:
 co2_budget:
   2020: 0.720 # average emissions of 2019 to 2021 relative to 1990, CO2 excl LULUCF, EEA data, European Environment Agency. (2023a). Annual European Union greenhouse gas inventory 1990–2021 and inventory report 2023 - CRF Table. https://unfccc.int/documents/627830
   2025: 0.648 # With additional measures (WAM) projection, CO2 excl LULUCF, European Environment Agency. (2023e). Member States’ greenhouse gas (GHG) emission projections 2023. https://www.eea.europa.eu/en/datahub/datahubitem-view/4b8d94a4-aed7-4e67-a54c-0623a50f48e8
-  2030: 0 # 55% reduction by 2030 (Ff55)
-  2035: 0
-  2040: 0 # 90% by 2040
-  2045: 0
-  2050: 0 # climate-neutral by 2050
+  2030: 0.450 # 55% reduction by 2030 (Ff55)
+  2035: 0.250
+  2040: 0.100 # 90% by 2040
+  2045: 0.050
+  2050: 0.000 # climate-neutral by 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#electricity
 electricity:
@@ -855,8 +871,10 @@ costs:
     "CO2 intensity": 0
     "discount rate": 0.07
   # Marginal and capital costs can be overwritten
-  # capital_cost:
+  capital_cost:
   #   onwind: 500
+    electrolysis: 1000
+    fuel cell: 845
   marginal_cost:
     solar: 0.01
     onwind: 0.015
