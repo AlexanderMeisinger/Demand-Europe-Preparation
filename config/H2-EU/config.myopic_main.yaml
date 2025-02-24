@@ -83,10 +83,10 @@ snapshots:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
   retrieve: auto
-  retrieve_databundle: true
-  retrieve_cost_data: true
+  retrieve_databundle: false
+  retrieve_cost_data: false
   build_cutout: false
-  retrieve_cutout: true
+  retrieve_cutout: false
   custom_busmap: false
   drop_leap_day: true
 
