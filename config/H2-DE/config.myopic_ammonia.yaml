@@ -20,8 +20,8 @@ remote:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: "myopic"
-  name: "myopicc-eu-climate-goals-default-2025-2050-5-T-H-B-I-A"
+  prefix: "H2-DE"
+  name: "Ammmonia"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -38,29 +38,12 @@ foresight: myopic
 # Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
 scenario:
   clusters:
-  #- 1
   - 16
-  #- 256
+
   opts:
   - ''
   sector_opts:
   - '144H'
-  #- '144H-ammonia'
-  #- '144H-lowcarbonbudget'
-  #- '144H-hightransportfuelcellshare'
-  #- '144H-noH2SMR'
-  #- '144H-nodistrict'
-  #- '144H-electrolysisnocost'
-  #- '144H-electrolysishighcost'
-  #- '144H-fuelcellnocost'
-  #- '144H-decentral'
-  #- '144H-noH2network'
-  #- '144H-nodistrict'
-  #- '144H-noco2sequestration'
-  #- '144H-nofossilimport'
-  #- '144H-hydrogenturbine'
-  #- '144H-highh2industry'
-  #- '144H-highco2price'
 
   planning_horizons:
   #- 2020
@@ -693,7 +676,7 @@ sector:
       allam: false
     biomass_to_methanol: false
     biomass_to_methanol_cc: false
-  ammonia: true
+  ammonia: true ##H2G-A
   min_part_load_fischer_tropsch: 0.5
   min_part_load_methanolisation: 0.3
   min_part_load_methanation: 0.3
