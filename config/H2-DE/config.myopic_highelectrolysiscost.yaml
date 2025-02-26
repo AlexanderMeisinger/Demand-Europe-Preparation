@@ -1,3 +1,16 @@
+# Changes in costs.csv
+#electrolysis,FOM,4.0,%/year
+#electrolysis,efficiency,0.0001,per unit#
+#electrolysis,efficiency-heat,0.0001,per unit
+#electrolysis,investment,1500000.0,EUR/kW_e
+#electrolysis,lifetime,25.0,years
+#electrolysis small,FOM,4.0,%/year
+#electrolysis small,efficiency,0.0001,per unit
+#electrolysis small,efficiency-heat,0.0001,per unit
+#electrolysis small,investment,875000.0,EUR/kW_e
+#electrolysis small,lifetime,25.0,years
+
+
 # SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
 #
 # SPDX-License-Identifier: CC0-1.0
@@ -20,8 +33,8 @@ remote:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: "myopic"
-  name: "myopic-eu-h2"
+  prefix: "H2DE"
+  name: "base"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -38,41 +51,17 @@ foresight: myopic
 # Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
 scenario:
   clusters:
-  #- 1
-  - 39
-  #- 256
+  - 16
   opts:
   - ''
   sector_opts:
   - '144H'
-  #- '144H-ammonia'
-  #- '144H-lowcarbonbudget'
-  #- '144H-hightransportfuelcellshare'
-  #- '144H-noH2SMR'
-  #- '144H-nodistrict'
-  #- '144H-electrolysisnocost'
-  #- '144H-electrolysishighcost'
-  #- '144H-fuelcellnocost'
-  #- '144H-decentral'
-  #- '144H-noH2network'
-  #- '144H-nodistrict'
-  #- '144H-noco2sequestration'
-  #- '144H-nofossilimport'
-  #- '144H-hydrogenturbine'
-  #- '144H-highh2industry'
-  #- '144H-highco2price'
-
   planning_horizons:
-  #- 2020
-  #- 2025
   - 2030
-  #- 2035
-  #- 2040
-  #- 2045
   - 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
-countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
+countries: ["DE"]
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
 snapshots:
@@ -693,7 +682,7 @@ sector:
       allam: false
     biomass_to_methanol: false
     biomass_to_methanol_cc: false
-  ammonia: true
+  ammonia: false
   min_part_load_fischer_tropsch: 0.5
   min_part_load_methanolisation: 0.3
   min_part_load_methanation: 0.3
@@ -873,15 +862,15 @@ costs:
   # Marginal and capital costs can be overwritten
   capital_cost:
   #   onwind: 500
-    electrolysis: 1000
-    fuel cell: 845
+    electrolysis: 10000000000 #H2GA in cost.csv
+    fuel cell: 845 #H2GA in cost.csv
   marginal_cost:
     solar: 0.01
     onwind: 0.015
     offwind: 0.015
     hydro: 0.
     H2: 0.
-    electrolysis: 0.
+    electrolysis: 10000000000. #H2GA in costs.csv
     fuel cell: 0.
     battery: 0.
     battery inverter: 0.
@@ -1065,7 +1054,7 @@ plotting:
   costs_threshold: 1
   energy_max: 20000
   energy_min: -20000
-  energy_threshold: 50.
+  energy_threshold: 0.
 
   nice_names:
     OCGT: "Open-Cycle Gas"

@@ -20,8 +20,8 @@ remote:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: "myopic"
-  name: "myopicc-eu-climate-goals-default-2025-2050-5-T-H-B-I-A"
+  prefix: "H2DE"
+  name: "base"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -38,37 +38,13 @@ foresight: myopic
 # Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
 scenario:
   clusters:
-  #- 1
   - 16
-  #- 256
   opts:
   - ''
   sector_opts:
   - '144H'
-  #- '144H-ammonia'
-  #- '144H-lowcarbonbudget'
-  #- '144H-hightransportfuelcellshare'
-  #- '144H-noH2SMR'
-  #- '144H-nodistrict'
-  #- '144H-electrolysisnocost'
-  #- '144H-electrolysishighcost'
-  #- '144H-fuelcellnocost'
-  #- '144H-decentral'
-  #- '144H-noH2network'
-  #- '144H-nodistrict'
-  #- '144H-noco2sequestration'
-  #- '144H-nofossilimport'
-  #- '144H-hydrogenturbine'
-  #- '144H-highh2industry'
-  #- '144H-highco2price'
-
   planning_horizons:
-  #- 2020
-  #- 2025
   - 2030
-  #- 2035
-  #- 2040
-  #- 2045
   - 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
@@ -84,7 +60,7 @@ snapshots:
 enable:
   retrieve: auto
   retrieve_databundle: false
-  retrieve_cost_data: false
+  retrieve_cost_data: true
   build_cutout: false
   retrieve_cutout: false
   custom_busmap: false
@@ -718,7 +694,7 @@ sector:
       compression_per_1000km: 0.01
     electricity distribution grid:
       efficiency_static: 0.97
-  H2_network: false
+  H2_network: false #h2GA
   gas_network: false
   H2_retrofit: false
   H2_retrofit_capacity_per_CH4: 0.6
@@ -1065,7 +1041,7 @@ plotting:
   costs_threshold: 1
   energy_max: 20000
   energy_min: -20000
-  energy_threshold: 50.
+  energy_threshold: 0.
 
   nice_names:
     OCGT: "Open-Cycle Gas"

@@ -20,8 +20,8 @@ remote:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: "H2-DE"
-  name: "Ammmonia"
+  prefix: "H2DE"
+  name: "base"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -39,19 +39,12 @@ foresight: myopic
 scenario:
   clusters:
   - 16
-
   opts:
   - ''
   sector_opts:
   - '144H'
-
   planning_horizons:
-  #- 2020
-  #- 2025
   - 2030
-  #- 2035
-  #- 2040
-  #- 2045
   - 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
@@ -1048,7 +1041,7 @@ plotting:
   costs_threshold: 1
   energy_max: 20000
   energy_min: -20000
-  energy_threshold: 50.
+  energy_threshold: 0.
 
   nice_names:
     OCGT: "Open-Cycle Gas"
