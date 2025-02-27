@@ -20,8 +20,8 @@ remote:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: "myopic"
-  name: "myopic-eu-h2"
+  prefix: "H2EU"
+  name: "base"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -84,7 +84,7 @@ snapshots:
 enable:
   retrieve: auto
   retrieve_databundle: false
-  retrieve_cost_data: false
+  retrieve_cost_data: true
   build_cutout: false
   retrieve_cutout: false
   custom_busmap: false
@@ -649,10 +649,10 @@ sector:
   hydrogen_turbine: false
   SMR: true
   SMR_cc: true
-  regional_oil_demand: false
-  regional_coal_demand: false
+  regional_oil_demand: true
+  regional_coal_demand: true
   regional_co2_sequestration_potential:
-    enable: false
+    enable: true
     attribute:
     - conservative estimate Mt
     - conservative estimate GAS Mt
@@ -672,7 +672,7 @@ sector:
     2050: 200
   co2_sequestration_cost: 10
   co2_sequestration_lifetime: 50
-  co2_spatial: false
+  co2_spatial: true #H2GA
   co2_network: false
   co2_network_cost_factor: 1
   cc_fraction: 0.9
@@ -682,15 +682,15 @@ sector:
   - nearshore    # within 50 km of sea
     # - offshore
   methanol:
-    regional_methanol_demand: false
-    methanol_reforming: false
-    methanol_reforming_cc: false
-    methanol_to_kerosene: false
+    regional_methanol_demand: true
+    methanol_reforming: true
+    methanol_reforming_cc: true
+    methanol_to_kerosene: true
     methanol_to_power:
-      ccgt: false
-      ccgt_cc: false
-      ocgt: false
-      allam: false
+      ccgt: true
+      ccgt_cc: true
+      ocgt: true
+      allam: true
     biomass_to_methanol: false
     biomass_to_methanol_cc: false
   ammonia: false
@@ -725,7 +725,7 @@ sector:
   gas_network_connectivity_upgrade: 1
   gas_distribution_grid: true
   gas_distribution_grid_cost_factor: 1.0
-  biomass_spatial: false
+  biomass_spatial: true #H2GA
   biomass_transport: false
   biogas_upgrading_cc: false
   conventional_generation:
@@ -873,8 +873,8 @@ costs:
   # Marginal and capital costs can be overwritten
   capital_cost:
   #   onwind: 500
-    electrolysis: 1000
-    fuel cell: 845
+    #electrolysis: 1000
+    #fuel cell: 845
   marginal_cost:
     solar: 0.01
     onwind: 0.015

@@ -20,8 +20,8 @@ remote:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
-  prefix: "myopic"
-  name: "myopicc-eu-climate-goals-decentral-2025-2050-5-T-H-B-I-A"
+  prefix: "H2EU"
+  name: "base"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -38,21 +38,41 @@ foresight: myopic
 # Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
 scenario:
   clusters:
+  #- 1
   - 39
-  #- 128
   #- 256
   opts:
   - ''
   sector_opts:
-  - '144H-T-H-B-I-A-decentral'
+  - '144H'
+  - '144H-solar+c0'
+  - '144H-solar+c1'
+  - '144H-solar+m0'
+  - '144H-solar+m1'
+  #- '144H-ammonia'
+  #- '144H-lowcarbonbudget'
+  #- '144H-hightransportfuelcellshare'
+  #- '144H-noH2SMR'
+  #- '144H-nodistrict'
+  #- '144H-electrolysisnocost'
+  #- '144H-electrolysishighcost'
+  #- '144H-fuelcellnocost'
+  #- '144H-decentral'
+  #- '144H-noH2network'
+  #- '144H-nodistrict'
+  #- '144H-noco2sequestration'
+  #- '144H-nofossilimport'
+  #- '144H-hydrogenturbine'
+  #- '144H-highh2industry'
+  #- '144H-highco2price'
 
   planning_horizons:
   #- 2020
-  - 2025
+  #- 2025
   - 2030
-  - 2035
-  - 2040
-  - 2045
+  #- 2035
+  #- 2040
+  #- 2045
   - 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
@@ -67,10 +87,10 @@ snapshots:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
   retrieve: auto
-  retrieve_databundle: true
+  retrieve_databundle: false
   retrieve_cost_data: true
   build_cutout: false
-  retrieve_cutout: true
+  retrieve_cutout: false
   custom_busmap: false
   drop_leap_day: true
 
@@ -855,8 +875,10 @@ costs:
     "CO2 intensity": 0
     "discount rate": 0.07
   # Marginal and capital costs can be overwritten
-  # capital_cost:
+  capital_cost:
   #   onwind: 500
+    #electrolysis: 1000
+    #fuel cell: 845
   marginal_cost:
     solar: 0.01
     onwind: 0.015

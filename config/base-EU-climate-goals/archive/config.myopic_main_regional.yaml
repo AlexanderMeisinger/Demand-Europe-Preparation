@@ -21,7 +21,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: "myopic"
-  name: "myopicc-eu-climate-goals-default-2025-2050-5-T-H-B-I-A"
+  name: "myopicc-eu-climate-goals-default-regional-2025-2050-5-T-H-B-I-A"
   scenarios:
     enable: false
     file: config/scenarios.yaml
@@ -67,10 +67,10 @@ snapshots:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
   retrieve: auto
-  retrieve_databundle: true
-  retrieve_cost_data: true
+  retrieve_databundle: false
+  retrieve_cost_data: false
   build_cutout: false
-  retrieve_cutout: true
+  retrieve_cutout: false
   custom_busmap: false
   drop_leap_day: true
 
@@ -633,10 +633,10 @@ sector:
   hydrogen_turbine: false
   SMR: true
   SMR_cc: true
-  regional_oil_demand: false
-  regional_coal_demand: false
+  regional_oil_demand: true
+  regional_coal_demand: true
   regional_co2_sequestration_potential:
-    enable: false
+    enable: true
     attribute:
     - conservative estimate Mt
     - conservative estimate GAS Mt
@@ -656,8 +656,8 @@ sector:
     2050: 200
   co2_sequestration_cost: 10
   co2_sequestration_lifetime: 50
-  co2_spatial: false
-  co2_network: false
+  co2_spatial: true
+  co2_network: true
   co2_network_cost_factor: 1
   cc_fraction: 0.9
   hydrogen_underground_storage: true
@@ -666,7 +666,7 @@ sector:
   - nearshore    # within 50 km of sea
     # - offshore
   methanol:
-    regional_methanol_demand: false
+    regional_methanol_demand: true
     methanol_reforming: false
     methanol_reforming_cc: false
     methanol_to_kerosene: false
@@ -703,13 +703,13 @@ sector:
     electricity distribution grid:
       efficiency_static: 0.97
   H2_network: true
-  gas_network: false
+  gas_network: true
   H2_retrofit: false
   H2_retrofit_capacity_per_CH4: 0.6
   gas_network_connectivity_upgrade: 1
   gas_distribution_grid: true
   gas_distribution_grid_cost_factor: 1.0
-  biomass_spatial: false
+  biomass_spatial: true
   biomass_transport: false
   biogas_upgrading_cc: false
   conventional_generation:
