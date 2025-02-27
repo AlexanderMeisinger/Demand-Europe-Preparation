@@ -1,4 +1,5 @@
-# Storyline: Green Deal, Technology-open (incl. CC), regio-specific, but no additional biomass usage 
+# Storyline: CAPEX Elecctrolysis 25% Off, Green Deal, Technology-open (incl. CC), regio-specific, but no additional biomass usage 
+# Changes are set in costs.csv in resources, no chances in config
 
 # SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
 #
@@ -23,7 +24,7 @@ remote:
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
 run:
   prefix: "myopic"
-  name: "myopicc-eu-climate-goals-default-2025-2050-5-T-H-B-I-A"
+  name: "myopicc-eu-climate-goals-lowcostelectrolysis-2025-2050-5-T-H-B-I-A"
   scenarios:
     enable: false
     file: config/scenarios.yaml
