@@ -227,21 +227,21 @@ def costs(scenarios, country):
 
 # Settings
 # Set path for scenarios
-MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-default-2025-2050-5-T-H-B-I-A"
-LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-low_carbon_budget-2025-2050-5-T-H-B-I-A"
-NOH2GRID_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-noH2network-2025-2050-5-T-H-B-I-A"
-AMMONIA_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-ammonia-2025-2050-5-T-H-B-I-A"
-DECENTRAL_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/myopic-2.0-celsius-decentral-2025-2050-5-T-H-B-I-A"
+MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.main"
+LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.lowcarbon"
+LOWH2COST_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.lowH2cost"
+GRIDFREEZE_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.gridfreeze"
+HIGHH2DEMAND_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.highH2demand"
 
 # Config settings for scenario
 SCENARIOS = {
     (0, 0, 0, 0): (MAIN_SCENARIOS), 
     (1, 0, 0, 0): (LOWCARBON_SCENARIOS),
-    (0, 1, 0, 0): (NOH2GRID_SCENARIOS),
-    (0, 0, 1, 0): (AMMONIA_SCENARIOS),
-    (0, 0, 0, 1): (DECENTRAL_SCENARIOS)
+    (0, 1, 0, 0): (LOWH2COST_SCENARIOS),
+    (0, 0, 1, 0): (GRIDFREEZE_SCENARIOS),
+    (0, 0, 0, 1): (HIGHH2DEMAND_SCENARIOS),
 }
-NAMES = ["low_carbon", "no_h2grid", "ammonia", "decentral"]
+NAMES = ["low_carbon", "low_h2cost", "grid_freeze", "high_h2demand"]
 countries = ["DE", "EU"] # EU means all European countries
 
 for country in countries:
