@@ -1,3 +1,5 @@
+# Storyline: Green Deal, Technology-open (incl. CC), regio-specific, but no additional biomass usage 
+
 # SPDX-FileCopyrightText: Contributors to PyPSA-Eur <https://github.com/pypsa/pypsa-eur>
 #
 # SPDX-License-Identifier: CC0-1.0
@@ -38,22 +40,22 @@ foresight: myopic
 # Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
 scenario:
   clusters:
-  #- 1
   - 16
-  #- 256
   opts:
   - ''
   sector_opts:
   - '144H'
+
   planning_horizons:
-  - 2020
   - 2025
   - 2030
+  - 2035
+  - 2040
+  - 2045
   - 2050
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#countries
 countries: ["DE"]
-
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
 snapshots:
   start: "2013-01-01"
@@ -64,7 +66,7 @@ snapshots:
 enable:
   retrieve: auto
   retrieve_databundle: false
-  retrieve_cost_data: true
+  retrieve_cost_data: false
   build_cutout: false
   retrieve_cutout: false
   custom_busmap: false
@@ -128,7 +130,7 @@ electricity:
     enable: false
     by_country: false
 
-  transmission_limit: vopt
+  transmission_limit: vopt 
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#atlite
 atlite:
@@ -605,7 +607,7 @@ sector:
     central: 180
   boilers: true
   resistive_heaters: true
-  oil_boilers: false
+  oil_boilers: true #H2GA
   biomass_boiler: true
   overdimension_heat_generators:
     decentral: 1.1  #to cover demand peaks bigger than data
@@ -620,19 +622,19 @@ sector:
   solar_cf_correction: 0.788457  # =  >>> 1/1.2683
   marginal_cost_storage: 0. #1e-4
   methanation: true
-  coal_cc: false
+  coal_cc: true #H2GA 
   dac: true
   co2_vent: false
   central_heat_vent: false
   allam_cycle_gas: false
   hydrogen_fuel_cell: true
-  hydrogen_turbine: false
+  hydrogen_turbine: true #H2GA
   SMR: true
-  SMR_cc: true
-  regional_oil_demand: false
-  regional_coal_demand: false
+  SMR_cc: true #H2GA
+  regional_oil_demand: true #H2GA
+  regional_coal_demand: true #H2GA
   regional_co2_sequestration_potential:
-    enable: false
+    enable: true #H2GA
     attribute:
     - conservative estimate Mt
     - conservative estimate GAS Mt
@@ -652,8 +654,8 @@ sector:
     2050: 200
   co2_sequestration_cost: 10
   co2_sequestration_lifetime: 50
-  co2_spatial: false
-  co2_network: false
+  co2_spatial: true #H2GA
+  co2_network: true #H2GA
   co2_network_cost_factor: 1
   cc_fraction: 0.9
   hydrogen_underground_storage: true
@@ -662,18 +664,18 @@ sector:
   - nearshore    # within 50 km of sea
     # - offshore
   methanol:
-    regional_methanol_demand: false
-    methanol_reforming: false
-    methanol_reforming_cc: false
-    methanol_to_kerosene: false
+    regional_methanol_demand: true #H2GA
+    methanol_reforming: true #H2GA
+    methanol_reforming_cc: true #H2GA 
+    methanol_to_kerosene: true #H2GA
     methanol_to_power:
-      ccgt: false
-      ccgt_cc: false
-      ocgt: false
+      ccgt: true #H2GA
+      ccgt_cc: true #H2GA
+      ocgt: true #H2GA
       allam: false
     biomass_to_methanol: false
     biomass_to_methanol_cc: false
-  ammonia: false
+  ammonia: regional #H2GA
   min_part_load_fischer_tropsch: 0.5
   min_part_load_methanolisation: 0.3
   min_part_load_methanation: 0.3
@@ -699,14 +701,14 @@ sector:
     electricity distribution grid:
       efficiency_static: 0.97
   H2_network: true
-  gas_network: false
-  H2_retrofit: false
+  gas_network: true #H2GA
+  H2_retrofit: true #H2GA
   H2_retrofit_capacity_per_CH4: 0.6
   gas_network_connectivity_upgrade: 1
   gas_distribution_grid: true
   gas_distribution_grid_cost_factor: 1.0
-  biomass_spatial: false
-  biomass_transport: false
+  biomass_spatial: true #H2GA
+  biomass_transport: true #H2GA
   biogas_upgrading_cc: false
   conventional_generation:
     OCGT: gas
@@ -851,10 +853,8 @@ costs:
     "CO2 intensity": 0
     "discount rate": 0.07
   # Marginal and capital costs can be overwritten
-  capital_cost:
+  # capital_cost:
   #   onwind: 500
-    electrolysis: 1000
-    fuel cell: 845
   marginal_cost:
     solar: 0.01
     onwind: 0.015
@@ -1045,7 +1045,7 @@ plotting:
   costs_threshold: 1
   energy_max: 20000
   energy_min: -20000
-  energy_threshold: 0.
+  energy_threshold: 0
 
   nice_names:
     OCGT: "Open-Cycle Gas"
