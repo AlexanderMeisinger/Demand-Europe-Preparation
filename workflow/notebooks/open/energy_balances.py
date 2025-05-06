@@ -313,13 +313,14 @@ def plot_balances(run_name, config, country, energy_threshold):
         plt.close(fig)
 
         
-run_name = "EU-Climate-Goals-Main"
-run_name_pypsa = "myopic-default-20250202-2025-2050-5-T-H-B-I-A"
-config = "config.myopic_play.yaml" 
+run_name = "base-2.0-Celsius-main"
+run_name_config = "base-2.0-Celsius"
+run_name_pypsa = "myopic-2.0-celsius-default-2025-2050-5-T-H-B-I-A"
+config = "config.myopic_ammonia.yaml" 
 countries = ["DE", "EU", ""] # EU means all European countries
 energy_threshold = 5 # in TWh; different between DE and EU
 
-with open("/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/" + config) as file:
+with open(f"/mnt/e/H2GMA/Github/Europe/analyse-h2g-a-ap3-eu/config/{run_name_config}/" + config) as file:
     config = yaml.safe_load(file)
 
 networks_dict = {
