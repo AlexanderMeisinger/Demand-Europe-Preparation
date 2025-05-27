@@ -3,6 +3,7 @@
 # Project: H2Global meets Africa (FENES, OTH Regensburg)
 # Base: https://doi.org/10.1016/j.joule.2023.06.016 and https://github.com/PyPSA/pypsa-eur
 
+# Package imports
 import os
 import re
 import sys
@@ -16,8 +17,27 @@ import pypsa
 xr.set_options(display_style="html")
 
 
-# Process capacity data
 def capacity(scenarios, country):
+    """
+    Process installed and optimal energy system capacities from PyPSA-Eur NetCDF scenario files.
+
+    This function reads a set of scenario-specific PyPSA network files, extracts optimal capacities,
+    and returns electricity generation, conversion, and storage capacities.
+
+    Parameters:
+        scenarios (str): Path to the scenario directory containing `configs/` and `networks/`.
+        country (str): Either a specific country code (e.g., "DE") or "EU" for full-European analysis.
+
+    Returns:
+        gen (pd.DataFrame): Installed generation and storage capacity in GW per carrier.
+        con (pd.DataFrame): Installed conversion capacity in GW per carrier (e.g. links).
+        twh (pd.DataFrame): Annual energy output in TWh per carrier (excluding generators and links).
+
+    Notes:
+        - Converts MWh to TWh and MW to GW for interpretability.
+        - Drops unused scenario variations based on fixed config values.
+        - Filters country-specific data if `country != "EU"`.
+    """
     # Read config settings for scenario
     files = sorted([f for f in os.listdir(f"{scenarios}/configs") if os.path.isfile(os.path.join(f"{scenarios}/configs", f))])
     if files:
@@ -77,8 +97,23 @@ def capacity(scenarios, country):
     return gen, con, twh
 
 
-# Process energy balances
 def energy_balances(scenarios, sector, country):
+    """
+    Extracts and processes energy balance data for a specific sector and country
+    from a collection of PyPSA-Eur network (.nc) files.
+
+    This function supports aggregation of spatial and non-spatial results, adds derived carriers
+    (e.g., oil refining from hydrogen inputs), and performs postprocessing for visualization.
+
+    Parameters:
+        scenarios (str): Path to the scenario folder that contains `configs/` and `networks/`.
+        sector (str): The sector of interest (e.g., "energy", "Hydrogen_Storage", "co2").
+        country (str): Country code (e.g., "DE") or "EU" for aggregated European results.
+
+    Returns:
+        pd.DataFrame: Energy balance for the specified sector in TWh, with scenarios as columns
+                      and carriers as rows.
+    """
     # Read config settings for scenario
     files = sorted([f for f in os.listdir(f"{scenarios}/configs") if os.path.isfile(os.path.join(f"{scenarios}/configs", f))])
     if files:
@@ -124,10 +159,11 @@ def energy_balances(scenarios, sector, country):
             df_filtered = df_annual_eu[df_annual_eu.index.get_level_values('bus_carrier').isin(carriers_to_add)]
             df_filtered[:] = 0.0
 
-            # Add to df_annual
+            # Merge placeholders for missing carriers (set to 0.0)
             df_annual = df_annual.add(df_filtered, fill_value=0)
             df_annual = df_annual.reorder_levels(['bus_carrier', 'component', 'carrier'])
 
+            # Conversion for regional oil consideration
             df_annual.loc[("oil", "Link", "Fischer-Tropsch")] = df_annual.loc[("Hydrogen Storage", "Link", "Fischer-Tropsch")]*(-1)*0.8 if ("Hydrogen Storage", "Link", "Fischer-Tropsch") in df_annual.index else 0 
             df_annual.loc[("oil", "Link", "agriculture machinery oil")] = df_annual.loc[("agriculture machinery oil", "Link", "agriculture machinery oil")]*(-1) if ("agriculture machinery oil", "Link", "agriculture machinery oil") in df_annual.index else 0 
             df_annual.loc[("oil", "Link", "kerosene for aviation")] = df_annual.loc[("kerosene for aviation", "Link", "kerosene for aviation")]*(-1) if ("kerosene for aviation", "Link", "kerosene for aviation") in df_annual.index else 0 
@@ -146,13 +182,16 @@ def energy_balances(scenarios, sector, country):
             df_annual.loc[("oil primary", "Generator", "oil primary")] = df_annual.loc[("oil", "Link", "oil refining")]/0.95 if ("oil", "Link", "oil refining") in df_annual.index else 0 
             df_annual.loc[("oil primary", "Link", "oil refining")] = df_annual.loc[("oil primary", "Generator", "oil primary")]*(-1) 
             
+            # Conversion for regional coal consideration
             df_annual.loc[("coal", "Link", "coal")] = df_annual.loc[("AC", "Link", "coal")]*(-1)/0.33 if ("AC", "Link", "coal") in df_annual.index else 0 
             df_annual.loc[("coal", "Link", "coal for industry")] = df_annual.loc[("coal for industry", "Link", "coal for industry")]*(-1) if ("coal for industry", "Link", "coal for industry") in df_annual.index else 0 
             df_annual.loc[("coal", "Generator", "coal")] = (df_annual.loc[("coal", "Link", "coal")]+df_annual.loc[("coal", "Link", "coal for industry")])*(-1) 
 
+            # Conversion for regional lignite consideration
             df_annual.loc[("lignite", "Link", "lignite")] = df_annual.loc[("AC", "Link", "lignite")]*(-1)/0.33 if ("AC", "Link", "lignite") in df_annual.index else 0 
             df_annual.loc[("lignite", "Generator", "lignite")] = df_annual.loc[("lignite", "Link", "lignite")]*(-1)
 
+            # Conversion for regional methanol consideration
             df_annual.loc[("methanol", "Link", "CCGT methanol")] = df_annual.loc[("AC", "Link", "CCGT methanol")]*(-1)/0.57 if ("AC", "Link", "CCGT methanol") in df_annual.index else 0 
             df_annual.loc[("methanol", "Link", "CCGT methanol CC")] = df_annual.loc[("AC", "Link", "CCGT methanol CC")]*(-1)/0.57 if ("AC", "Link", "CCGT methanol CC") in df_annual.index else 0 
             df_annual.loc[("methanol", "Link", "Methanol steam reforming")] = df_annual.loc[("Hydrogen Storage", "Link", "Methanol steam reforming")]*(-1)/0.83 if ("Hydrogen Storage", "Link", "Methanol steam reforming") in df_annual.index else 0 
@@ -163,11 +202,14 @@ def energy_balances(scenarios, sector, country):
             df_annual.loc[("methanol", "Link", "methanolisation")] = df_annual.loc[("Hydrogen Storage", "Link", "methanolisation")]*(-1)/0.88 if ("Hydrogen Storage", "Link", "methanolisation") in df_annual.index else 0 
             df_annual.loc[("methanol", "Link", "shipping methanol")] = df_annual.loc[("shipping methanol", "Link", "shipping methanol")]*(-1) if ("shipping methanol", "Link", "shipping methanol") in df_annual.index else 0 
             
+            # Conversion for regional nuclear consideration
             df_annual.loc[("uranium", "Link", "nuclear")] = df_annual.loc[("AC", "Link", "nuclear")]*(-1)/0.33 if ("AC", "Link", "nuclear") in df_annual.index else 0
         
+        # Final Sorting with converted parameters
         df_annual = df_annual.reorder_levels(['bus_carrier', 'component', 'carrier'])
         df_annual = df_annual.sort_index()
 
+        # Merge this file's results into the aggregated energy balance table
         energy_balance = energy_balance.reindex(df_annual.index.union(energy_balance.index))
         energy_balance.loc[df_annual.index, label] = df_annual
     # Fill nan values
@@ -206,8 +248,23 @@ def energy_balances(scenarios, sector, country):
     return df 
 
 
-# Process total costs
 def costs(scenarios, country):
+    """
+    Extracts and aggregates total system costs (CAPEX + OPEX) from PyPSA-Eur scenario outputs
+    for a given country or for the EU as a whole.
+
+    The function reads capital and marginal operating costs from all scenario combinations,
+    filters for the relevant country (if specified), and returns a DataFrame with costs
+    in billion Euros.
+
+    Parameters:
+        scenarios (str): Path to the scenario folder containing PyPSA networks and config files.
+        country (str): Country code (e.g., "DE") or "EU" for full-European aggregation.
+
+    Returns:
+        pd.DataFrame: Multi-scenario cost table indexed by carrier and columns by planning horizon,
+                      expressed in billion Euros (€/a).
+    """
     # Read config settings for scenario
     files = sorted([f for f in os.listdir(f"{scenarios}/configs") if os.path.isfile(os.path.join(f"{scenarios}/configs", f))])
     if files:
@@ -238,6 +295,7 @@ def costs(scenarios, country):
         # Read nc file
         n = pypsa.Network(filename)
         # Extract and sort results from nc file
+        # Capital Expenditures (CAPEX)
         if country == "EU":
             df_capital_annual = pd.concat([n.statistics.capex()], keys=["capital"])
         else:
@@ -250,6 +308,7 @@ def costs(scenarios, country):
         cost = cost.reindex(df_capital_annual.index.union(cost.index))
         cost.loc[df_capital_annual.index, label] = df_capital_annual
 
+        # Operating Expenditures (OPEX)
         if country == "EU":
             df_marginal_costs_annual = pd.concat([n.statistics.opex()], keys=["marginal"])
         else:
