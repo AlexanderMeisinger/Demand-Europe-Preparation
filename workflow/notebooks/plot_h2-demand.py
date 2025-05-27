@@ -1,4 +1,6 @@
 # This script plots the h2 demand from PyPSA-Eur
+# Author: Alexander Meisinger
+# Base: https://doi.org/10.1016/j.joule.2023.06.016
 
 # Package imports
 import pypsa
