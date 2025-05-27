@@ -1,5 +1,6 @@
 # This script plots the h2 demand from PyPSA-Eur
 # Author: Alexander Meisinger
+# Project: H2Global meets Africa (FENES, OTH Regensburg)
 # Base: https://doi.org/10.1016/j.joule.2023.06.016
 
 # Package imports
