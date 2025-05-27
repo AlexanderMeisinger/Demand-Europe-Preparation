@@ -263,7 +263,7 @@ fn = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/resources/myopic/config.main/regions_
 nodes = gpd.read_file(fn).set_index("name")
 
 # Directory for saving scenario result visualizations
-OUTPUT = "workflow/results/scenario"
+OUTPUT = "workflow/results/H2Global-meets-Africa"
 
 # Set xarray to display outputs in HTML (nicer formatting in Jupyter)
 xr.set_options(display_style="html")
