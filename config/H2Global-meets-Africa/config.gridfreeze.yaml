@@ -44,7 +44,7 @@ scenario:
   opts:
   - ''
   sector_opts:
-  - '144H'
+  - '3H'
 
   planning_horizons:
   - 2025
@@ -65,7 +65,7 @@ snapshots:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
-  retrieve: auto
+  retrieve: false
   retrieve_databundle: false
   retrieve_cost_data: false
   build_cutout: false
@@ -967,10 +967,10 @@ solving:
       parallel: "on"
       random_seed: 123
     gurobi-default:
-      threads: 8
+      threads: 32
       method: 2 # barrier
       crossover: 0
-      BarConvTol: 1.e-6
+      BarConvTol: 1.e-5
       Seed: 123
       AggFill: 0
       PreDual: 0

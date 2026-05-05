@@ -44,7 +44,7 @@ scenario:
   opts:
   - ''
   sector_opts:
-  - '144H'
+  - '3H'
 
   planning_horizons:
   - 2025
@@ -65,7 +65,7 @@ snapshots:
 
 # docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#enable
 enable:
-  retrieve: auto
+  retrieve: false
   retrieve_databundle: false
   retrieve_cost_data: false
   build_cutout: false
@@ -523,27 +523,27 @@ sector:
   v2g: true
   land_transport_fuel_cell_share:
     2020: 0
-    2025: 0.04
-    2030: 0.08
-    2035: 0.11
-    2040: 0.18
-    2045: 0.21
-    2050: 0.25
+    2025: 0.03
+    2030: 0.07
+    2035: 0.10
+    2040: 0.13
+    2045: 0.17
+    2050: 0.20
   land_transport_electric_share:
     2020: 0
-    2025: 0.11
-    2030: 0.23
-    2035: 0.34
+    2025: 0.13
+    2030: 0.27
+    2035: 0.40
     2040: 0.53
-    2045: 0.64
-    2050: 0.75
+    2045: 0.67
+    2050: 0.80
   land_transport_ice_share:
     2020: 1
-    2025: 0.85
-    2030: 0.7
-    2035: 0.55
-    2040: 0.3
-    2045: 0.15
+    2025: 0.84
+    2030: 0.66
+    2035: 0.50
+    2040: 0.34
+    2045: 0.16
     2050: 0
   transport_electric_efficiency: 53.19 # 1 MWh_el = 53.19*100 km
   transport_fuel_cell_efficiency: 30.003 # 1 MWh_H2 = 30.003*100 km
@@ -582,8 +582,8 @@ sector:
     2050: 0
   shipping_methanol_efficiency: 0.46
   shipping_oil_efficiency: 0.40
-  aviation_demand_factor: 1.25
-  HVC_demand_factor: 1.25
+  aviation_demand_factor: 1.2
+  HVC_demand_factor: 1.2
   time_dep_hp_cop: true
   heat_pump_sink_T_individual_heating: 55.
   reduce_space_heat_exogenously: true
@@ -967,10 +967,10 @@ solving:
       parallel: "on"
       random_seed: 123
     gurobi-default:
-      threads: 8
+      threads: 32
       method: 2 # barrier
       crossover: 0
-      BarConvTol: 1.e-6
+      BarConvTol: 1.e-5
       Seed: 123
       AggFill: 0
       PreDual: 0
