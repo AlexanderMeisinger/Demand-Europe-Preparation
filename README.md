@@ -11,8 +11,6 @@ The selected scenarios represent potential developments in the European energy s
 - Grid Freeze Scenario: No additional grid expansion compared to the current status
 - High H2 Demand Scenario: 20% increase in H2 demand in the HVC industry, aviation, and vehicles
 
-Code for interactive dashboard for results exploration.
-
 See live version at: https://europe-demand.streamlit.app/
 
 ## Local Installation and Usage
