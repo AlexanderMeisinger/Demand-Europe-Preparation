@@ -2,9 +2,9 @@
 
 Base: [![DOI](https://zenodo.org/badge/451538981.svg)](https://zenodo.org/badge/latestdoi/451538981)
 
-Branch: [H2G-A-AP3](https://github.com/AlexanderMeisinger/pypsa-eur/tree/H2G-A-AP3)
+Branch: [Europe-Demand-Branch](https://github.com/AlexanderMeisinger/pypsa-eur/tree/H2G-A-AP3)
 
-Streamlit: [dashboard_h2g-a-ap3-eu](https://github.com/AlexanderMeisinger/dashboard_h2g-a-ap3-eu)
+Streamlit: [Europe-Demand-Streamlit](https://github.com/AlexanderMeisinger/dashboard_h2g-a-ap3-eu)
 
 This repository examines the impact of policy and technological measures on the European hydrogen demand, with a particular focus on Germany. For this, the open-source energy model PyPSA-Eur is used. The geographical scope covers the EU, the United Kingdom, Norway, Switzerland, and the Western Balkan countries, excluding Malta and Cyprus. The analysis encompasses 34 countries and 39 regions. 
 
