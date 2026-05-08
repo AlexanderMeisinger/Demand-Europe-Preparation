@@ -2,7 +2,7 @@
 
 Base: [![DOI](https://zenodo.org/badge/451538981.svg)](https://zenodo.org/badge/latestdoi/451538981)
 
-Branch: [Europe-Demand-Branch](https://github.com/AlexanderMeisinger/pypsa-eur/tree/H2G-A-AP3)
+Branch: [Europe-Demand-Branch](https://github.com/AlexanderMeisinger/pypsa-eur/tree/H2G-A-Demand-Europe-WP3))
 
 Streamlit: [Europe-Demand-Streamlit](https://github.com/AlexanderMeisinger/dashboard_h2g-a-ap3-eu)
 
