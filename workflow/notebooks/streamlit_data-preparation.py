@@ -337,12 +337,12 @@ def costs(scenarios, country):
 
 # Settings
 # Set path for scenarios
-MAIN_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.main"
-LOWCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.lowcarbon"
-LOWH2COST_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.lowH2cost"
-GRIDFREEZE_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.gridfreeze"
-HIGHH2DEMAND_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.highH2demand"
-HIGHCARBON_SCENARIOS = "/mnt/e/H2GMA/Github/Europe/pypsa-eur/results/myopic/config.highcarbon"
+MAIN_SCENARIOS = "/home/alex-charly/AP3/pypsa-eur/results/myopic/config.main"
+LOWCARBON_SCENARIOS = "/home/alex-charly/AP3/pypsa-eur/results/myopic/config.lowcarbon"
+LOWH2COST_SCENARIOS = "/home/alex-charly/AP3/pypsa-eur/results/myopic/config.lowH2cost"
+GRIDFREEZE_SCENARIOS = "/home/alex-charly/AP3/pypsa-eur/results/myopic/config.gridfreeze"
+HIGHH2DEMAND_SCENARIOS = "/home/alex-charly/AP3/pypsa-eur/results/myopic/config.highH2demand"
+HIGHCARBON_SCENARIOS = "/home/alex-charly/AP3/pypsa-eur/results/myopic/config.highcarbon"
 
 # Config settings for scenario
 SCENARIOS = {
