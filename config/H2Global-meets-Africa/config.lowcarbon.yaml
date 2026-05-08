@@ -44,7 +44,7 @@ scenario:
   opts:
   - ''
   sector_opts:
-  - '3H-cb12.0ex0'
+  - '3H-cb18.9ex0'
 
   planning_horizons:
   - 2025
